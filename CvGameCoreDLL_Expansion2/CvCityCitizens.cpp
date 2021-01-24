@@ -833,9 +833,10 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, SPrecomputedExpensiveNumbers sto
 			//how much do we value certain yields
 			if (eYield == YIELD_FOOD)
 			{
-				// If we have enough food and don't want to grow we zero out the value of additional food
+				// if we have enough food and don't want to grow we care very little about extra food
+				// but we still care, extra food can help against unhappiness from distress!
 				if (store.iExcessFoodTimes100 > 0 && bAvoidGrowth)
-					continue;
+					iYield100 /= 20;
 
 				// If we have growth penalties, pretend the yield is lower
 				if (store.iExcessFoodTimes100 > 0)
@@ -910,7 +911,7 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, SPrecomputedExpensiveNumbers sto
 		}
 	}
 
-	return max(1, iValue/100);
+	return iValue;
 }
 
 /// Are this City's Citizens under automation?
@@ -1486,8 +1487,6 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, int iExcessF
 		iFlavorDiplomacy = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
 	}
 
-	int iValue = 0;
-
 	// factor in the fact that specialists may need less food
 	int iFoodConsumptionBonus = (pPlayer->isHalfSpecialistFood()) ? 1 : 0;
 	if (iFoodConsumptionBonus == 0 && m_pCity->isCapital())
@@ -1643,8 +1642,6 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, int iExcessF
 			iYieldValue += iYield100*iYieldMod;
 		}
 	}
-
-	iValue = iYieldValue / 100;
 
 	int iGPPYieldValue = pSpecialistInfo->getGreatPeopleRateChange();
 	for (int i = 0; i < GC.getNumFlavorTypes(); i++)
@@ -1894,7 +1891,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, int iExcessF
 		}
 	}
 
-	iValue += iGPPYieldValue;
+	int iValue = iYieldValue + iGPPYieldValue;
 
 	//Let's see how close we are to a specialist. If close, emphasize.
 	int iProximityToGPBonus = 0;
@@ -2274,7 +2271,7 @@ CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bo
 								// Looking for best, unworked Plot: Forced plots are FIRST to be picked
 								if (bWantBest && !bWantWorked)
 								{
-									iValue += 10000;
+									iValue += 1000*1000;
 								}
 								// Looking for worst, worked Plot: Forced plots are LAST to be picked, so make it's value incredibly high
 								if (!bWantBest && bWantWorked)
@@ -2285,14 +2282,14 @@ CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bo
 									}
 									else
 									{
-										iValue += 10000;
+										iValue += 1000*1000;
 									}
 								}
 							}
 
 							if (iBestPlotID == -1 ||							// First Plot?
 								(bWantBest && iValue > iBestPlotValue) ||		// Best Plot so far?
-								(!bWantBest && iValue < iBestPlotValue))			// Worst Plot so far?
+								(!bWantBest && iValue < iBestPlotValue))		// Worst Plot so far?
 							{
 								iBestPlotValue = iValue;
 								iBestPlotID = iPlotLoop;
