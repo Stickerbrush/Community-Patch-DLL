@@ -13,7 +13,6 @@
 #define CIV5_GAME_H
 
 #include "CvRandom.h"
-#include "FFastVector.h"
 #include "FTimer.h"
 #include "CvPreGame.h"
 #include <CvLocalization.h>

@@ -13681,7 +13681,7 @@ void CvGame::TriggerArchaeologySiteCreation(bool bCheckInitialized)
 
 
 //	--------------------------------------------------------------------------------
-int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0>& inputData, FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0>& chosenDigSites)
+int CalculateDigSiteWeight(int iIndex, vector<CvArchaeologyData>& inputData, vector<CvArchaeologyData>& chosenDigSites)
 {
 	CvMap& theMap = GC.getMap();
 	int iGridWidth = theMap.getGridWidth();
@@ -13801,7 +13801,7 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 
 
 //	--------------------------------------------------------------------------------
-void CalculateDigSiteWeights(int iGridSize, FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0>& inputData, FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0>& chosenDigSites, FFastVector<int, true, c_eCiv5GameplayDLL, 0>& currentWeights)
+void CalculateDigSiteWeights(int iGridSize, vector<CvArchaeologyData>& inputData, vector<CvArchaeologyData>& chosenDigSites, vector<int>& currentWeights)
 {
 	CvAssertMsg(NO_GREAT_WORK_ARTIFACT_CLASS == 0, "Value of NO_ARTIFACT has changed");
 	for (int i = 0; i < iGridSize; i++)
@@ -14024,8 +14024,8 @@ void CvGame::SpawnArchaeologySitesHistorically()
 	int iHowManyChosenDigSites = 0;
 
 	// fill the historical buffer with the archaeological data
-	FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0> historicalDigSites;
-	FFastVector<CvArchaeologyData, true, c_eCiv5GameplayDLL, 0> scratchDigSites;
+	vector<CvArchaeologyData> historicalDigSites;
+	vector<CvArchaeologyData> scratchDigSites;
 	int iGridSize = theMap.numPlots();
 	CvAssertMsg(iGridSize > 0, "iGridSize is zero");
 	historicalDigSites.resize(iGridSize);
@@ -14080,12 +14080,7 @@ void CvGame::SpawnArchaeologySitesHistorically()
 	}
 
 	// calculate initial weights
-	FFastVector<int, true, c_eCiv5GameplayDLL, 0> digSiteWeights;
-	digSiteWeights.resize(iGridSize);
-	for (int i = 0; i < iGridSize; i++)
-	{
-		digSiteWeights[i] = 0;
-	}
+	vector<int> digSiteWeights(iGridSize,0);
 	CalculateDigSiteWeights(iGridSize, historicalDigSites, scratchDigSites, digSiteWeights);
 
 	// build a weight vector

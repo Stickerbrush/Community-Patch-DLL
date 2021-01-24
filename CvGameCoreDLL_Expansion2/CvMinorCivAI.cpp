@@ -624,13 +624,10 @@ void CvMinorCivAI::RecalculateRewards(PlayerTypes ePlayer)
 	if (m_QuestsGiven.empty() || m_QuestsGiven.size() <= (size_t)ePlayer)
 		return;
 
-	QuestListForPlayer::iterator itr_quest;
-	for (itr_quest = m_QuestsGiven[ePlayer].begin(); itr_quest != m_QuestsGiven[ePlayer].end(); itr_quest++)
-	{
-		if (itr_quest != NULL)
-			itr_quest->CalculateRewards(ePlayer);
-	}
+	for (QuestListForPlayer::iterator itr_quest = m_QuestsGiven[ePlayer].begin(); itr_quest != m_QuestsGiven[ePlayer].end(); itr_quest++)
+		itr_quest->CalculateRewards(ePlayer);
 }
+
 void CvMinorCivQuest::CalculateRewards(PlayerTypes ePlayer)
 {
 	if(ePlayer == NO_PLAYER || m_eMinor == NO_PLAYER)
@@ -4256,27 +4253,7 @@ void CvMinorCivAI::Read(FDataStream& kStream)
 	// List of quests given
 	ResetQuestList();
 
-	int iPlayerEntriesToRead;
-	//antonjs: consider: change this; always read in iPlayerEntriesToRead
-	iPlayerEntriesToRead = MAX_MAJOR_CIVS;
-
-	for(int iPlayerLoop = 0; iPlayerLoop < iPlayerEntriesToRead; iPlayerLoop++)
-	{
-		int iQuestEntriesToRead;
-		kStream >> iQuestEntriesToRead;
-		CvMinorCivQuest tempQuest;
-		for(int iQuestLoop = 0; iQuestLoop < iQuestEntriesToRead; iQuestLoop++)
-		{
-			kStream >> tempQuest;
-
-			tempQuest.m_eMinor = GetPlayer()->GetID();
-			tempQuest.m_eAssignedPlayer = (PlayerTypes) iPlayerLoop;
-
-			m_QuestsGiven[iPlayerLoop].push_back(tempQuest);
-		}
-	}
-	CvAssertMsg(m_QuestsGiven.size() == MAX_MAJOR_CIVS, "Number of entries in minor's quest list does not match MAX_MAJOR_CIVS when read from memory!");
-
+	kStream >> m_QuestsGiven;
 	kStream >> m_bDisableNotifications;
 }
 
@@ -4346,21 +4323,7 @@ void CvMinorCivAI::Write(FDataStream& kStream) const
 	kStream << m_aiTurnsSincePtPWarning;
 #endif
 
-	// List of quests given
-	CvAssertMsg(m_QuestsGiven.size() == MAX_MAJOR_CIVS, "Number of entries in minor's quest list does not match MAX_MAJOR_CIVS when writing to memory!");
-	QuestListForAllPlayers::const_iterator itr_player;
-	for(itr_player = m_QuestsGiven.begin(); itr_player != m_QuestsGiven.end(); itr_player++)
-	{
-		QuestListForPlayer* pvQuestList = (QuestListForPlayer*)itr_player;
-		int iQuestEntriesToWrite = pvQuestList->size();
-		kStream << iQuestEntriesToWrite;
-		QuestListForPlayer::const_iterator itr_quest;
-		for(itr_quest = pvQuestList->begin(); itr_quest != pvQuestList->end(); itr_quest++)
-		{
-			kStream << *itr_quest;
-		}
-	}
-
+	kStream << m_QuestsGiven;
 	kStream << m_bDisableNotifications;
 }
 

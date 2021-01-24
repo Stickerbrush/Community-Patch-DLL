@@ -1313,10 +1313,6 @@ void CvEconomicAI::LogMonitor(void)
 	AppendToLog(strHeader, strLog, "Negative Happiness", m_pPlayer->GetUnhappiness());
 	AppendToLog(strHeader, strLog, "Net Happiness", m_pPlayer->GetExcessHappiness());
 
-	// # of each improvement constructed
-	FFastVector<int, true> m_aiNumImprovements;
-	m_aiNumImprovements.push_back_copy(-1, GC.getNumImprovementInfos());
-
 	// worked tiles
 	int iTiles = 0;
 	int iWorkedTiles = 0;
@@ -1407,61 +1403,31 @@ void CvEconomicAI::LogCityMonitor()
 
 	static bool bFirstRun = true;
 	bool bBuildHeader = false;
-	CvString strHeader;
 	if(bFirstRun)
 	{
 		bFirstRun = false;
 		bBuildHeader = true;
 	}
 
-	CvString strLog;
-
 	// Find the name of this civ and city
-	CvString strPlayerName;
-	strPlayerName = m_pPlayer->getCivilizationShortDescription();
-	CvString strLogName;
+	CvString strPlayerName = m_pPlayer->getCivilizationShortDescription();
+	CvString strLogName = "EconomicCityMonitorLog.csv";
 
 	// Open the log file
 	if(GC.getPlayerAndCityAILogSplit())
-	{
 		strLogName = "EconomicCityMonitorLog_" + strPlayerName + ".csv";
-	}
-	else
-	{
-		strLogName = "EconomicCityMonitorLog.csv";
-	}
 
-	FILogFile* pLog;
-	pLog = LOGFILEMGR.GetLog(strLogName, FILogFile::kDontTimeStamp);
-
-	CvString str;
-
-	float fRatio;
+	FILogFile* pLog = LOGFILEMGR.GetLog(strLogName, FILogFile::kDontTimeStamp);
 
 	// per city
 	int iLoopCity = 0;
-	CvCity* pLoopCity = NULL;
-
-	FFastVector<int> aiCityYields;
-	aiCityYields.push_back_copy(-1, NUM_YIELD_TYPES);
-
-	FFastVector<int> aiSpecialistsYields;
-	aiSpecialistsYields.push_back_copy(-1, NUM_YIELD_TYPES);
-
-	for(pLoopCity = m_pPlayer->firstCity(&iLoopCity); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iLoopCity))
+	for(CvCity* pLoopCity = m_pPlayer->firstCity(&iLoopCity); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iLoopCity))
 	{
-		for(uint ui = 0; ui < aiCityYields.size(); ui++)
-		{
-			aiCityYields[ui] = 0;
-		}
+		vector<int> aiCityYields(NUM_YIELD_TYPES, 0);
+		vector<int> aiSpecialistsYields(NUM_YIELD_TYPES, 0);
 
-		for(uint ui = 0; ui < aiSpecialistsYields.size(); ui++)
-		{
-			aiSpecialistsYields[ui] = 0;
-		}
-
-		strHeader = "";
-		strLog = "";
+		CvString strHeader = "";
+		CvString strLog = "";
 
 		// civ name
 		AppendToLog(strHeader, strLog, "Civ Name", strPlayerName);
@@ -1470,7 +1436,7 @@ void CvEconomicAI::LogCityMonitor()
 		AppendToLog(strHeader, strLog, "Turn", GC.getGame().getGameTurn());
 
 		// city name
-		str = pLoopCity->getName();
+		CvString str = pLoopCity->getName();
 		AppendToLog(strHeader, strLog, "City Name", str);
 
 		//	pop
@@ -1516,7 +1482,7 @@ void CvEconomicAI::LogCityMonitor()
 		//	yields / pop
 		for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
 		{
-			fRatio = 0.0f;
+			float fRatio = 0.0f;
 			if(pLoopCity->getPopulation() > 0)
 			{
 				fRatio = aiCityYields[ui] / (float)pLoopCity->getPopulation();
@@ -1595,7 +1561,7 @@ void CvEconomicAI::LogCityMonitor()
 		// ratio from specialists
 		for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
 		{
-			fRatio = 0.0f;
+			float fRatio = 0.0f;
 			if(aiCityYields[ui] > 0)
 			{
 				fRatio = aiSpecialistsYields[ui] / (float)aiCityYields[ui];
@@ -1678,7 +1644,7 @@ void CvEconomicAI::LogCityMonitor()
 
 		// % of worked tiles that are improved
 		// improved / worked tiles
-		fRatio = 0.0f;
+		float fRatio = 0.0f;
 		if(iWorkedTiles > 0)
 		{
 			fRatio = iImprovedTiles / (float)iWorkedTiles;

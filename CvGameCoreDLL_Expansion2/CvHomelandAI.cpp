@@ -6,7 +6,6 @@
 	All rights reserved. 
 	------------------------------------------------------------------------------------------------------- */
 #include "CvGameCoreDLLPCH.h"
-#include "FFastVector.h"
 #include "CvGameCoreUtils.h"
 #include "CvHomelandAI.h"
 #include "CvAStar.h"

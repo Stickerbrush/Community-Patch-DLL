@@ -230,8 +230,8 @@ FDataStream& operator<<(FDataStream&, const CvMinorCivQuest&);
 
 class CvPlayer;
 
-typedef FStaticVector< CvMinorCivQuest, SAFE_ESTIMATE_NUM_QUESTS_PER_PLAYER, false, c_eCiv5GameplayDLL > QuestListForPlayer; // will grow size if needed
-typedef FStaticVector< QuestListForPlayer, MAX_MAJOR_CIVS, false, c_eCiv5GameplayDLL > QuestListForAllPlayers;
+typedef vector< CvMinorCivQuest > QuestListForPlayer; // will grow size if needed
+typedef vector< QuestListForPlayer > QuestListForAllPlayers;
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //  CLASS:      CvMinorCivAI

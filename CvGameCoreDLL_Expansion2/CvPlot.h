@@ -45,7 +45,7 @@ typedef bool (*PlotUnitFunc)(CvUnit* pUnit, int iData1, int iData2);
 #define NUM_INVISIBLE_TYPES 1
 #endif
 
-typedef FFastVector<IDInfo, true, c_eCiv5GameplayDLL, 0> IDInfoVector;
+typedef vector<IDInfo> IDInfoVector;
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //  STRUCT: CvArchaeologyData

@@ -8,7 +8,6 @@
 #include "CvGameCoreDLLPCH.h"
 #include "CvTacticalAI.h"
 #include "CvTacticalAnalysisMap.h"
-#include "FFastVector.h"
 #include "CvGameCoreUtils.h"
 #include "CvAStar.h"
 #include "CvEconomicAI.h"

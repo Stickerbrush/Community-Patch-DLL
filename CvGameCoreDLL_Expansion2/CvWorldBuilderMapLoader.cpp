@@ -1020,8 +1020,8 @@ bool CvWorldBuilderMapLoader::InitMap()
 	// remove this hack but be very careful if you do and test thoroughly with scenario saves.
 	SetInitialItems(true);
 
-	FFastVector<CvPlayer*> kMajorCivs;
-	FFastVector<CvPlayer*> kMinorCivs;
+	vector<CvPlayer*> kMajorCivs;
+	vector<CvPlayer*> kMinorCivs;
 	for(uint i = 0; i < MAX_CIV_PLAYERS; ++i)
 	{
 		PlayerTypes ePlayer = PlayerTypes(i);

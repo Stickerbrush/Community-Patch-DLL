@@ -20,7 +20,6 @@
 #include "CvUnit.h"
 #include "CvArmyAI.h"
 #include "LinkedList.h"
-#include "FFastVector.h"
 #include "CvPreGame.h"
 #include "CvAchievementUnlocker.h"
 #include "CvUnitCycler.h"
