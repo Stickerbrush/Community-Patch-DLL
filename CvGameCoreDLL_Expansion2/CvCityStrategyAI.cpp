@@ -543,6 +543,9 @@ CvAICityStrategies* CvCityStrategyAI::GetAICityStrategies()
 /// Returns whether or not a player has adopted this CityStrategy
 bool CvCityStrategyAI::IsUsingCityStrategy(AICityStrategyTypes eStrategy)
 {
+	if (eStrategy == NO_AICITYSTRATEGY)
+		return false;
+
 	return m_pabUsingCityStrategy[(int) eStrategy];
 }
 
@@ -3181,15 +3184,12 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedTileImprovers(AICityStrategyT
 	{
 		CvMilitaryAI* pMilitaryAI =kPlayer.GetMilitaryAI();
 		MilitaryAIStrategyTypes eStrategyKillBarbs = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_ERADICATE_BARBARIANS");
-		if(eStrategyKillBarbs != NO_MILITARYAISTRATEGY)
+		if(pMilitaryAI->IsUsingStrategy(eStrategyKillBarbs))
 		{
-			if(pMilitaryAI->IsUsingStrategy(eStrategyKillBarbs))
-			{
-				//Do we have enough military units to defend our land? No? Abort.
-				int iNumMilitaryUnits = kPlayer.getNumMilitaryUnits();
-				if((iNumWorkers * 6) >= iNumMilitaryUnits)
-					return false;
-			}
+			//Do we have enough military units to defend our land? No? Abort.
+			int iNumMilitaryUnits = kPlayer.getNumMilitaryUnits();
+			if((iNumWorkers * 6) >= iNumMilitaryUnits)
+				return false;
 		}
 	}
 
@@ -3272,11 +3272,8 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_EnoughTileImprovers(AICityStrateg
 		return false;
 
 	AICityStrategyTypes eNeedImproversStrategy = (AICityStrategyTypes) GC.getInfoTypeForString("AICITYSTRATEGY_NEED_TILE_IMPROVERS");
-	if(eNeedImproversStrategy != NO_ECONOMICAISTRATEGY)
-	{
-		if(pCity->GetCityStrategyAI()->IsUsingCityStrategy(eNeedImproversStrategy))
-			return false;
-	}
+	if(pCity->GetCityStrategyAI()->IsUsingCityStrategy(eNeedImproversStrategy))
+		return false;
 
 	// If it's a minor with at least 1 worker per city, always return true
 	if(GET_PLAYER(pCity->getOwner()).isMinorCiv())
@@ -3406,14 +3403,11 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedNavalTileImprovement(CvCity* 
 bool CityStrategyAIHelpers::IsTestCityStrategy_EnoughNavalTileImprovement(CvCity* pCity)
 {
 	AICityStrategyTypes eStrategyNeedNavalTileImprovement = (AICityStrategyTypes) GC.getInfoTypeForString("AICITYSTRATEGY_NEED_NAVAL_TILE_IMPROVEMENT");
-
-	if(eStrategyNeedNavalTileImprovement != NO_ECONOMICAISTRATEGY)
+	if(!pCity->GetCityStrategyAI()->IsUsingCityStrategy(eStrategyNeedNavalTileImprovement))
 	{
-		if(!pCity->GetCityStrategyAI()->IsUsingCityStrategy(eStrategyNeedNavalTileImprovement))
-		{
-			return true;
-		}
+		return true;
 	}
+
 #if defined(MOD_BALANCE_CORE)
 	int iX = pCity->getX(); int iY = pCity->getY(); int iOwner = pCity->getOwner();
 
@@ -5286,7 +5280,7 @@ int CityStrategyAIHelpers::GetBuildingYieldValue(CvCity *pCity, BuildingTypes eB
 				iYieldValue += max(1, iFlavorReligion);
 			}
 			
-			if (eStrategyBuildingReligion != NO_ECONOMICAISTRATEGY && kPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion))
+			if (kPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion))
 			{
 				iYieldValue += max(1, iFlavorReligion);
 			}

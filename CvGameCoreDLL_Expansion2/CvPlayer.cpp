@@ -2287,6 +2287,7 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 
 	m_vCityConnectionPlots.clear();
 	m_iNumUnitsSuppliedCached = -1;
+	m_bUnlockedGrowthAnywhereThisTurn = false;
 
 	m_iPlotFoundValuesUpdateTurn = -1;
 	m_iPreviousBestSettlePlot = -1;
@@ -11174,6 +11175,7 @@ void CvPlayer::doTurn()
 
 	//cache reset
 	m_iNumUnitsSuppliedCached = -1;
+	m_bUnlockedGrowthAnywhereThisTurn = false;
 
 	AI_doTurnPre();
 
@@ -41140,6 +41142,16 @@ CvCity* CvPlayer::GetClosestCityToCity(const CvCity * pRefCity)
 	return pNeighborCity;
 }
 
+void CvPlayer::setUnlockedGrowthAnywhereThisTurn(bool bValue)
+{
+	m_bUnlockedGrowthAnywhereThisTurn = bValue;
+}
+
+bool CvPlayer::unlockedGrowthAnywhereThisTurn() const
+{
+	return m_bUnlockedGrowthAnywhereThisTurn;
+}
+
 //	--------------------------------------------------------------------------------
 CvCity* CvPlayer::GetFirstCityWithBuildingClass(BuildingClassTypes eBuildingClass)
 {
@@ -47968,8 +47980,7 @@ PlayerTypes CvPlayer::GetPlayerWhoStoleMyFavoriteCitySite()
 	//only check this if we want to found new cities
 	static EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
 	static EconomicAIStrategyTypes eExpandOther = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
-	bool bWantExpansion = (eEarlyExpand != NO_ECONOMICAISTRATEGY && GetEconomicAI()->IsUsingStrategy(eEarlyExpand)) ||
-		(eExpandOther != NO_ECONOMICAISTRATEGY && GetEconomicAI()->IsUsingStrategy(eExpandOther));
+	bool bWantExpansion = GetEconomicAI()->IsUsingStrategy(eEarlyExpand) || GetEconomicAI()->IsUsingStrategy(eExpandOther);
 
 	//looking up the best settle plot is expensive so do this only if we really want to expand
 	if (bWantExpansion)

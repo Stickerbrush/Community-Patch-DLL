@@ -2872,6 +2872,9 @@ public:
 	CvCity* GetClosestCityToUsByPlots(PlayerTypes eOtherPlayer) const;
 	CvCity* GetClosestCityToCity(const CvCity* pRefCity);
 
+	void setUnlockedGrowthAnywhereThisTurn(bool bValue);
+	bool unlockedGrowthAnywhereThisTurn() const;
+
 protected:
 	class ConqueredByBoolField
 	{
@@ -3613,6 +3616,7 @@ protected:
 	// not serialized
 	std::vector<int> m_viPlotFoundValues;
 	int	m_iPlotFoundValuesUpdateTurn;
+	bool m_bUnlockedGrowthAnywhereThisTurn;
 
 	// Policies
 	CvPlayerPolicies* m_pPlayerPolicies;

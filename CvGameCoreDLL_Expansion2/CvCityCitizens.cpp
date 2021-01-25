@@ -339,11 +339,6 @@ void CvCityCitizens::DoTurn()
 				SetFocusType(NO_CITY_AI_FOCUS_TYPE);
 				bForceCheck = true;
 			}
-			if (IsNoAutoAssignSpecialists())
-			{
-				SetNoAutoAssignSpecialists(false);
-				bForceCheck = true;
-			}
 			if (IsForcedAvoidGrowth())
 			{
 				SetForcedAvoidGrowth(false);
@@ -356,11 +351,6 @@ void CvCityCitizens::DoTurn()
 			if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
 			{
 				SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-				bForceCheck = true;
-			}
-			if (IsNoAutoAssignSpecialists())
-			{
-				SetNoAutoAssignSpecialists(false);
 				bForceCheck = true;
 			}
 			if (IsForcedAvoidGrowth())
@@ -384,11 +374,6 @@ void CvCityCitizens::DoTurn()
 				SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
 				bForceCheck = true;
 			}
-			if (IsNoAutoAssignSpecialists())
-			{
-				SetNoAutoAssignSpecialists(false);
-				bForceCheck = true;
-			}
 			if (IsForcedAvoidGrowth())
 			{
 				SetForcedAvoidGrowth(false);
@@ -399,18 +384,10 @@ void CvCityCitizens::DoTurn()
 		{
 			// Are we running at a deficit?
 			EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY", true);
-			bool bInDeficit = false;
-			if (eStrategyLosingMoney != NO_ECONOMICAISTRATEGY)
-			{
-				bInDeficit = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
-			}
+			bool bInDeficit = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
 
 			EconomicAIStrategyTypes eStrategyBuildingReligion = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_DEVELOPING_RELIGION", true);
-			bool bBuildingReligion = false;
-			if (eStrategyBuildingReligion != NO_ECONOMICAISTRATEGY)
-			{
-				bBuildingReligion = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion);
-			}
+			bool bBuildingReligion = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion);
 
 			ProcessTypes eProcess = m_pCity->getProductionProcess();
 			ProjectTypes eProject = m_pCity->getProductionProject();
@@ -422,11 +399,6 @@ void CvCityCitizens::DoTurn()
 				if (GetFocusType() != CITY_AI_FOCUS_TYPE_GOLD)
 				{
 					SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
-					bForceCheck = true;
-				}
-				if (IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(false);
 					bForceCheck = true;
 				}
 				if (IsForcedAvoidGrowth())
@@ -442,11 +414,6 @@ void CvCityCitizens::DoTurn()
 					SetFocusType(CITY_AI_FOCUS_TYPE_GOLD_GROWTH);
 					bForceCheck = true;
 				}
-				if (IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(false);
-					bForceCheck = true;
-				}
 				if (IsForcedAvoidGrowth())
 				{
 					SetForcedAvoidGrowth(false);
@@ -458,11 +425,6 @@ void CvCityCitizens::DoTurn()
 				if (GetFocusType() != CITY_AI_FOCUS_TYPE_PRODUCTION)
 				{
 					SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
-					bForceCheck = true;
-				}
-				if (IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(false);
 					bForceCheck = true;
 				}
 				if (IsForcedAvoidGrowth())
@@ -498,11 +460,6 @@ void CvCityCitizens::DoTurn()
 					}
 				}
 
-				if (IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(false);
-					bForceCheck = true;
-				}
 				if (IsForcedAvoidGrowth())
 				{
 					SetForcedAvoidGrowth(false);
@@ -662,64 +619,49 @@ void CvCityCitizens::DoTurn()
 			iUnhappyAverage -= iDelta;
 	}
 
-	if (thisPlayer.getNumCities() > 0 && iUnhappyAverage > 0)
-	{
+	if (thisPlayer.getNumCities() > 0)
 		iUnhappyAverage /= thisPlayer.getNumCities();
-	}
+
+	EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
+	bool bWantSettlers = thisPlayer.GetEconomicAI()->IsUsingStrategy(eEarlyExpand);
 
 	if (!thisPlayer.isHuman())
 	{
-		if (thisPlayer.IsEmpireUnhappy())
+		int iPotentialUnhappiness = m_pCity->getPotentialUnhappinessWithGrowthVal() - m_pCity->getPotentialHappinessWithGrowthVal();
+		if (iPotentialUnhappiness > 0 && thisPlayer.IsEmpireUnhappy())
 		{
-			int iExcessHappiness = thisPlayer.GetExcessHappiness();
-			int iPotentialUnhappiness = max(0, m_pCity->getPotentialUnhappinessWithGrowthVal() - m_pCity->getPotentialHappinessWithGrowthVal());
-
-			int iLock = MOD_BALANCE_CORE_HAPPINESS ? GC.getVERY_UNHAPPY_THRESHOLD() : -20;
-			bool bLockCity = (iExcessHappiness - iPotentialUnhappiness) <= iLock;
-
-			if (!bLockCity && thisPlayer.IsEmpireVeryUnhappy())
+			//default value for vanilla happiness
+			int iLockThreshold = -20;
+			if (MOD_BALANCE_CORE_HAPPINESS)
 			{
-				int iThisCityValue = m_pCity->getHappinessDelta() * -1;
-				if ((iThisCityValue * 2) > (iUnhappyAverage * 3))
-				{
-					bLockCity = true;
-				}
+				if (bWantSettlers)
+					//if we fall below this threshold the early expansion strategy will be disabled and we leave good city sites to our enemies
+					iLockThreshold = GC.getUNHAPPY_THRESHOLD();
+				else
+					//later on tolerate some more unhappiness
+					iLockThreshold = GC.getVERY_UNHAPPY_THRESHOLD();
 			}
 
-			if (bLockCity)
+			//lock the city if it's net negative and would take us over the threshold
+			int iExcessHappiness = thisPlayer.GetExcessHappiness();
+			if (iExcessHappiness - iPotentialUnhappiness <= iLockThreshold && m_pCity->getHappinessDelta() < 1)
 			{
 				if (!IsForcedAvoidGrowth())
 				{
 					SetForcedAvoidGrowth(true);
 					bForceCheck = true;
 				}
-				if (!IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(true);
-					bForceCheck = true;
-				}
 			}
-			else
+			//unlock only one city per turn, recheck next turn
+			else if (IsForcedAvoidGrowth() && thisPlayer.unlockedGrowthAnywhereThisTurn())
 			{
-				if (IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(false);
-					bForceCheck = true;
-				}
-				if (IsNoAutoAssignSpecialists())
-				{
-					SetNoAutoAssignSpecialists(false);
-					bForceCheck = true;
-				}
+				thisPlayer.setUnlockedGrowthAnywhereThisTurn(true);
+				SetForcedAvoidGrowth(false);
+				bForceCheck = true;
 			}
 		}
 		else
 		{
-			if (IsNoAutoAssignSpecialists())
-			{
-				SetNoAutoAssignSpecialists(false);
-				bForceCheck = true;
-			}
 			if (IsForcedAvoidGrowth())
 			{
 				SetForcedAvoidGrowth(false);

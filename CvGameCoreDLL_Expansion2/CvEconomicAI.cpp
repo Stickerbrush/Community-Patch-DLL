@@ -460,6 +460,9 @@ CvEconomicAIStrategyXMLEntries* CvEconomicAI::GetEconomicAIStrategies()
 /// Returns whether or not a player has adopted this Strategy
 bool CvEconomicAI::IsUsingStrategy(EconomicAIStrategyTypes eStrategy)
 {
+	if (eStrategy == NO_ECONOMICAISTRATEGY)
+		return false;
+
 	return m_pabUsingStrategy[(int) eStrategy];
 }
 
@@ -2015,15 +2018,11 @@ void CvEconomicAI::DoPlotPurchases()
 		return;
 	}
 
-	// No plot buying when at war
+	// No plot buying when at war and losing
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_AT_WAR");
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if (m_pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar) && m_pPlayer->GetDiplomacyAI()->GetStateAllWars() == STATE_ALL_WARS_LOSING)
 	{
-		//Losing?
-		if (m_pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar) && m_pPlayer->GetDiplomacyAI()->GetStateAllWars() == STATE_ALL_WARS_LOSING)
-		{
-			return;
-		}
+		return;
 	}
 
 	// Set up the parameters
@@ -3141,13 +3140,11 @@ bool EconomicAIHelpers::IsTestStrategy_NeedRecon(EconomicAIStrategyTypes eStrate
 	}
 	// Never desperate for explorers if we are at war
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_AT_WAR");
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
-		{
-			return false;
-		}
+		return false;
 	}
+
 	return (pPlayer->GetEconomicAI()->GetReconState() == RECON_STATE_NEEDED);
 }
 
@@ -3259,12 +3256,9 @@ bool EconomicAIHelpers::IsTestStrategy_NeedReconSea(EconomicAIStrategyTypes eStr
 	}
 	// Never desperate for explorers if we are at war
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_LOSING_WARS");
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	return (pPlayer->GetEconomicAI()->GetNavalReconState() == RECON_STATE_NEEDED);
@@ -3276,14 +3270,12 @@ bool EconomicAIHelpers::IsTestStrategy_EnoughReconSea(CvPlayer* pPlayer)
 #if defined(MOD_BALANCE_CORE)
 	// Never desperate for explorers if we are at war
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_LOSING_WARS");
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
-		{
-			return true;
-		}
+		return true;
 	}
 #endif
+
 	return (pPlayer->GetEconomicAI()->GetNavalReconState() == RECON_STATE_ENOUGH);
 }
 
@@ -3500,22 +3492,16 @@ bool EconomicAIHelpers::IsTestStrategy_EnoughExpansion(EconomicAIStrategyTypes e
 
 	// If we are running "ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS"
 	EconomicAIStrategyTypes eExpandOther = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
-	if (eExpandOther != NO_ECONOMICAISTRATEGY)
+	if (pPlayer->GetEconomicAI()->IsUsingStrategy(eExpandOther))
 	{
-		if (pPlayer->GetEconomicAI()->IsUsingStrategy(eExpandOther))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	// If we are running "ECONOMICAISTRATEGY_EARLY_EXPANSION"
 	EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
-	if (eEarlyExpand != NO_ECONOMICAISTRATEGY)
+	if (pPlayer->GetEconomicAI()->IsUsingStrategy(eEarlyExpand))
 	{
-		if (pPlayer->GetEconomicAI()->IsUsingStrategy(eEarlyExpand))
-		{
-			return false;
-		}
+		return false;
 	}
 	
 	//do this check last, it can be expensive

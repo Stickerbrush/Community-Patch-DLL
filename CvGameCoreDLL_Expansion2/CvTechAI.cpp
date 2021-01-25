@@ -128,12 +128,9 @@ void CvTechAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropagati
 			if(entry->IsAllowsEmbarking())
 			{
 				EconomicAIStrategyTypes eStrategyIslandStart = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_ISLAND_START");
-				if(eStrategyIslandStart != NO_ECONOMICAISTRATEGY)
+				if(m_pCurrentTechs->GetPlayer()->GetEconomicAI()->IsUsingStrategy(eStrategyIslandStart))
 				{
-					if(m_pCurrentTechs->GetPlayer()->GetEconomicAI()->IsUsingStrategy(eStrategyIslandStart))
-					{
-						iTechWeight += 10;
-					}
+					iTechWeight += 10;
 				}
 			}
 

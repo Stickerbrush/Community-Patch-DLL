@@ -427,6 +427,9 @@ CvMilitaryAIStrategyXMLEntries* CvMilitaryAI::GetMilitaryAIStrategies()
 /// Returns whether or not a player has adopted this Strategy
 bool CvMilitaryAI::IsUsingStrategy(MilitaryAIStrategyTypes eStrategy)
 {
+	if (eStrategy == NO_MILITARYAISTRATEGY)
+		return false;
+
 	return m_pabUsingStrategy[(int) eStrategy];
 }
 
@@ -3552,13 +3555,9 @@ bool MilitaryAIHelpers::IsTestStrategy_WarMobilization(MilitaryAIStrategyTypes e
 
 	// If we're at war don't bother with this Strategy
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_AT_WAR");
-
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	// Are we running the Conquest Grand Strategy?
@@ -3683,14 +3682,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EradicateBarbarians(MilitaryAIStrategyTyp
 {
 	// If we're at war don't bother with this Strategy (unless it is clear we are already winning)
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_AT_WAR");
-	if(eStrategyAtWar != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar))
+		if(!pPlayer->GetDiplomacyAI()->GetStateAllWars() == STATE_ALL_WARS_WINNING)
 		{
-			if(!pPlayer->GetDiplomacyAI()->GetStateAllWars() == STATE_ALL_WARS_WINNING)
-			{
-				return false;
-			}
+			return false;
 		}
 	}
 
@@ -3837,13 +3833,11 @@ bool MilitaryAIHelpers::IsTestStrategy_NeedRangedUnits(CvPlayer* pPlayer, int iN
 bool MilitaryAIHelpers::IsTestStrategy_NeedRangedDueToEarlySneakAttack(CvPlayer* pPlayer)
 {
 	MilitaryAIStrategyTypes eStrategyWarMob = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_WAR_MOBILIZATION");
-	if(eStrategyWarMob != NO_MILITARYAISTRATEGY)
+	if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyWarMob))
 	{
-		if(pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyWarMob))
-		{
-			return true;
-		}
+		return true;
 	}
+
 	return false;
 }
 
