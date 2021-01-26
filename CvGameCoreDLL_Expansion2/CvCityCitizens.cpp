@@ -295,338 +295,161 @@ void CvCityCitizens::DoTurn()
 		}
 	}
 
-	bool bWonder = false;
-	bool bSettler = false;
-	CvUnitEntry* pkUnitInfo = NULL;
-
-	const OrderData* pOrderNode = m_pCity->headOrderQueueNode();
-
-	CvBuildingClassInfo* pkBuildingClassInfo = NULL;
-	if (pOrderNode != NULL && pOrderNode->eOrderType == ORDER_TRAIN)
+	if (m_pCity->IsPuppet())
 	{
-		pkUnitInfo = GC.getUnitInfo((UnitTypes)pOrderNode->iData1);
-		if (pkUnitInfo != NULL && pkUnitInfo->IsFound())
-		{
-			bSettler = true;
-		}
+		bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
+
+		if (IsForcedAvoidGrowth())
+			bForceCheck |= SetForcedAvoidGrowth(false);
 	}
-	else if (pOrderNode != NULL && pOrderNode->eOrderType == ORDER_CONSTRUCT)
-	{
-		CvBuildingEntry* pkOrderBuildingInfo = GC.getBuildingInfo((BuildingTypes)pOrderNode->iData1);
 
-		if (pkOrderBuildingInfo)
+	//nothing else to do ...
+	if (thisPlayer.isHuman())
+		return;
+
+	// Are we running at a deficit?
+	EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY", true);
+	bool bInDeficit = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
+
+	EconomicAIStrategyTypes eStrategyBuildingReligion = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_DEVELOPING_RELIGION", true);
+	bool bBuildingReligion = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion);
+	bool bNeedFood = m_pCity->GetCityStrategyAI()->IsYieldDeficient(YIELD_FOOD);
+
+	//---------------
+	// note that GetPlotValue already considers wonder/settler building so we don't do that here
+	//---------------
+
+	if (bInDeficit && !bNeedFood)
+	{
+		bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
+	}
+	else if (bInDeficit && bNeedFood)
+	{
+		bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_GOLD_GROWTH);
+	}
+	else if (m_pCity->getProductionProcess() != NO_PROCESS || m_pCity->getProductionProject() != NO_PROJECT)
+	{
+		bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
+	}
+	else // no special cases? Alright, let's pick a function to follow...
+	{
+		AICityStrategyTypes eGoodGP = (AICityStrategyTypes)GC.getInfoTypeForString("AICITYSTRATEGY_GOOD_GP_CITY");
+		bool bGPCity = m_pCity->GetCityStrategyAI()->IsUsingCityStrategy(eGoodGP) || thisPlayer.GetDiplomacyAI()->IsGoingForCultureVictory();
+
+		bool bCultureBlock = false;
+		for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 		{
-			const BuildingClassTypes eOrderBuildingClass = (BuildingClassTypes)pkOrderBuildingInfo->GetBuildingClassType();
-			if (eOrderBuildingClass != NO_BUILDINGCLASS)
+			PlayerTypes eLoopPlayer = (PlayerTypes)iPlayerLoop;
+
+			if (eLoopPlayer != NO_PLAYER && eLoopPlayer != m_pCity->getOwner() && thisPlayer.GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && !GET_PLAYER(eLoopPlayer).isMinorCiv())
 			{
-				pkBuildingClassInfo = GC.getBuildingClassInfo(eOrderBuildingClass);
-				if (pkBuildingClassInfo && pkBuildingClassInfo->getMaxGlobalInstances() == 1)
+				if (GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->IsCloseToCultureVictory())
 				{
-					bWonder = true;
+					bCultureBlock = true;
+					break;
 				}
 			}
 		}
-	}
 
-	if (m_pCity->IsPuppet())
-	{
-#if defined(MOD_UI_CITY_PRODUCTION)
-		if (!(MOD_UI_CITY_PRODUCTION && thisPlayer.isHuman()))
+		if (bCultureBlock)
 		{
-#endif
-			if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-			{
-				SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-				bForceCheck = true;
-			}
-			if (IsForcedAvoidGrowth())
-			{
-				SetForcedAvoidGrowth(false);
-				bForceCheck = true;
-			}
-#if defined(MOD_UI_CITY_PRODUCTION)
-		}
-		if (!thisPlayer.isHuman())
-		{
-			if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-			{
-				SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-				bForceCheck = true;
-			}
-			if (IsForcedAvoidGrowth())
-			{
-				SetForcedAvoidGrowth(false);
-				bForceCheck = true;
-			}
-		}
-#endif
-	}
-	else if (!thisPlayer.isHuman() && m_pCity->getPopulation() >= 10)
-	{
-		CitySpecializationTypes eWonderSpecializationType = thisPlayer.GetCitySpecializationAI()->GetWonderSpecialization();
-
-		if ((m_pCity->GetCityStrategyAI()->GetSpecialization() == eWonderSpecializationType) 
-			|| bWonder 
-			|| (pkUnitInfo != NULL && pkUnitInfo->IsFound()))
-		{
-			if (GetFocusType() != CITY_AI_FOCUS_TYPE_PRODUCTION)
-			{
-				SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
-				bForceCheck = true;
-			}
-			if (IsForcedAvoidGrowth())
-			{
-				SetForcedAvoidGrowth(false);
-				bForceCheck = true;
-			}
+			bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_CULTURE);
 		}
 		else
 		{
-			// Are we running at a deficit?
-			EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY", true);
-			bool bInDeficit = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
-
-			EconomicAIStrategyTypes eStrategyBuildingReligion = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_DEVELOPING_RELIGION", true);
-			bool bBuildingReligion = thisPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyBuildingReligion);
-
-			ProcessTypes eProcess = m_pCity->getProductionProcess();
-			ProjectTypes eProject = m_pCity->getProductionProject();
-
-			bool bNeedFood = m_pCity->GetCityStrategyAI()->IsYieldDeficient(YIELD_FOOD);
-
-			if (bInDeficit && !bNeedFood)
+			CitySpecializationTypes eSpecialization = m_pCity->GetCityStrategyAI()->GetSpecialization();
+			if (eSpecialization != NO_CITY_SPECIALIZATION)
 			{
-				if (GetFocusType() != CITY_AI_FOCUS_TYPE_GOLD)
+				if (m_pCity->GetCityStrategyAI()->GetDefaultSpecialization() == eSpecialization)
 				{
-					SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
-					bForceCheck = true;
-				}
-				if (IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(false);
-					bForceCheck = true;
-				}
-			}
-			else if (bInDeficit && bNeedFood)
-			{
-				if (GetFocusType() != CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
-				{
-					SetFocusType(CITY_AI_FOCUS_TYPE_GOLD_GROWTH);
-					bForceCheck = true;
-				}
-				if (IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(false);
-					bForceCheck = true;
-				}
-			}
-			else if ((eProcess != NO_PROCESS) || (eProject != NO_PROJECT))
-			{
-				if (GetFocusType() != CITY_AI_FOCUS_TYPE_PRODUCTION)
-				{
-					SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
-					bForceCheck = true;
-				}
-				if (IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(false);
-					bForceCheck = true;
-				}
-			}
-			else // no special cases? Alright, let's pick a function to follow...
-			{
-				bool bGPCity = false;
-				AICityStrategyTypes eGoodGP = (AICityStrategyTypes)GC.getInfoTypeForString("AICITYSTRATEGY_GOOD_GP_CITY");
-				if (eGoodGP != NO_AICITYSTRATEGY)
-				{
-					bGPCity = m_pCity->GetCityStrategyAI()->IsUsingCityStrategy(eGoodGP);
-					if (!bGPCity)
-					{
-						bGPCity = thisPlayer.GetDiplomacyAI()->IsGoingForCultureVictory();
-					}
-				}
-				bool bCultureBlock = false;
-				for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
-				{
-					PlayerTypes eLoopPlayer = (PlayerTypes)iPlayerLoop;
-
-					if (eLoopPlayer != NO_PLAYER && eLoopPlayer != m_pCity->getOwner() && thisPlayer.GetDiplomacyAI()->IsPlayerValid(eLoopPlayer) && !GET_PLAYER(eLoopPlayer).isMinorCiv())
-					{
-						if (GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->IsCloseToCultureVictory())
-						{
-							bCultureBlock = true;
-							break;
-						}
-					}
-				}
-
-				if (IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(false);
-					bForceCheck = true;
-				}
-
-				if (bCultureBlock)
-				{
-					if (GetFocusType() != CITY_AI_FOCUS_TYPE_CULTURE)
-					{
-						SetFocusType(CITY_AI_FOCUS_TYPE_CULTURE);
-						bForceCheck = true;
-					}
+					bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
 				}
 				else
 				{
-					CitySpecializationTypes eSpecialization = m_pCity->GetCityStrategyAI()->GetSpecialization();
-					if (eSpecialization != -1)
+					CvCitySpecializationXMLEntry* pCitySpecializationEntry = GC.getCitySpecializationInfo(eSpecialization);
+					if (pCitySpecializationEntry)
 					{
-						if (m_pCity->GetCityStrategyAI()->GetDefaultSpecialization() == eSpecialization)
+						YieldTypes eYield = pCitySpecializationEntry->GetYieldType();
+						if (eYield == YIELD_FOOD && !IsAvoidGrowth()) //should really make sure the specialization is sane ...
 						{
-							SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-							bForceCheck = true;
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_FOOD);
 						}
-						else
+						else if (eYield == YIELD_PRODUCTION && bNeedFood)
 						{
-							CvCitySpecializationXMLEntry* pCitySpecializationEntry = GC.getCitySpecializationInfo(eSpecialization);
-							if (pCitySpecializationEntry)
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_PROD_GROWTH);
+						}
+						else if (eYield == YIELD_PRODUCTION && !bNeedFood)
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
+						}
+						else if (eYield == YIELD_GOLD && bNeedFood)
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_GOLD_GROWTH);
+						}
+						else if (eYield == YIELD_GOLD && !bNeedFood)
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
+						}
+						else if (eYield == YIELD_SCIENCE)
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_SCIENCE);
+						}
+						else if (eYield == YIELD_FAITH)
+						{
+							if (bBuildingReligion)
 							{
-								YieldTypes eYield = pCitySpecializationEntry->GetYieldType();
-								if (eYield == YIELD_FOOD)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_FOOD)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_FOOD);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_PRODUCTION && bNeedFood)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_PROD_GROWTH)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_PROD_GROWTH);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_PRODUCTION && !bNeedFood)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_PRODUCTION)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_GOLD && bNeedFood)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_GOLD_GROWTH);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_GOLD && !bNeedFood)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_GOLD)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_SCIENCE)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_SCIENCE)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_SCIENCE);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_FAITH)
-								{
-									if (bBuildingReligion)
-									{
-										if (GetFocusType() != CITY_AI_FOCUS_TYPE_FAITH)
-										{
-											SetFocusType(CITY_AI_FOCUS_TYPE_FAITH);
-											bForceCheck = true;
-										}
-									}
-									else
-									{
-										if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-										{
-											SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-											bForceCheck = true;
-										}
-									}
-								}
-								else if (eYield == YIELD_CULTURE && (!bGPCity || bCultureBlock))
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_CULTURE)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_CULTURE);
-										bForceCheck = true;
-									}
-								}
-								else if (eYield == YIELD_CULTURE && bGPCity)
-								{
-									if (GetFocusType() != CITY_AI_FOCUS_TYPE_GREAT_PEOPLE)
-									{
-										SetFocusType(CITY_AI_FOCUS_TYPE_GREAT_PEOPLE);
-										bForceCheck = true;
-									}
-								}
-								else
-								{
-									if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-									{
-										SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-										bForceCheck = true;
-									}
-								}
+								bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_FAITH);
 							}
 							else
 							{
-								if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-								{
-									SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-									bForceCheck = true;
-								}
+								bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
 							}
+						}
+						else if (eYield == YIELD_CULTURE && (!bGPCity || bCultureBlock))
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_CULTURE);
+						}
+						else if (eYield == YIELD_CULTURE && bGPCity)
+						{
+							bForceCheck |= SetFocusType(CITY_AI_FOCUS_TYPE_GREAT_PEOPLE);
+						}
+						else
+						{
+							bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
 						}
 					}
 					else
 					{
-						if (GetFocusType() != NO_CITY_AI_FOCUS_TYPE)
-						{
-							SetFocusType(NO_CITY_AI_FOCUS_TYPE);
-							bForceCheck = true;
-						}
+						bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
 					}
 				}
 			}
+			else
+			{
+				bForceCheck |= SetFocusType(NO_CITY_AI_FOCUS_TYPE);
+			}
 		}
-	}
 
-	int iLoop = 0;
-	int iUnhappyAverage = 0;
-	for (CvCity* pLoopCity = thisPlayer.firstCity(&iLoop); pLoopCity != NULL; pLoopCity = thisPlayer.nextCity(&iLoop))
-	{
-		int iDelta = pLoopCity->getHappinessDelta();
+		int iLoop = 0;
+		int iUnhappyAverage = 0;
+		for (CvCity* pLoopCity = thisPlayer.firstCity(&iLoop); pLoopCity != NULL; pLoopCity = thisPlayer.nextCity(&iLoop))
+		{
+			int iDelta = pLoopCity->getHappinessDelta();
 
-		//now crazyness - this is how we cache the value
-		pLoopCity->setHappinessDelta(iDelta);
+			//now crazyness - this is how we cache the value
+			pLoopCity->setHappinessDelta(iDelta);
 
-		//mind the sign change
-		if (iDelta < 0)
-			iUnhappyAverage -= iDelta;
-	}
+			//mind the sign change
+			if (iDelta < 0)
+				iUnhappyAverage -= iDelta;
+		}
 
-	if (thisPlayer.getNumCities() > 0)
-		iUnhappyAverage /= thisPlayer.getNumCities();
+		if (thisPlayer.getNumCities() > 0)
+			iUnhappyAverage /= thisPlayer.getNumCities();
 
-	EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
-	bool bWantSettlers = thisPlayer.GetEconomicAI()->IsUsingStrategy(eEarlyExpand);
+		EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
+		bool bWantSettlers = thisPlayer.GetEconomicAI()->IsUsingStrategy(eEarlyExpand);
 
-	if (!thisPlayer.isHuman())
-	{
 		int iPotentialUnhappiness = m_pCity->getPotentialUnhappinessWithGrowthVal() - m_pCity->getPotentialHappinessWithGrowthVal();
 		if (iPotentialUnhappiness > 0 && thisPlayer.IsEmpireUnhappy())
 		{
@@ -646,29 +469,21 @@ void CvCityCitizens::DoTurn()
 			int iExcessHappiness = thisPlayer.GetExcessHappiness();
 			if (iExcessHappiness - iPotentialUnhappiness <= iLockThreshold && m_pCity->getHappinessDelta() < 1)
 			{
-				if (!IsForcedAvoidGrowth())
-				{
-					SetForcedAvoidGrowth(true);
-					bForceCheck = true;
-				}
+				bForceCheck |= SetForcedAvoidGrowth(true);
 			}
 			//unlock only one city per turn, recheck next turn
 			else if (IsForcedAvoidGrowth() && thisPlayer.unlockedGrowthAnywhereThisTurn())
 			{
 				thisPlayer.setUnlockedGrowthAnywhereThisTurn(true);
-				SetForcedAvoidGrowth(false);
-				bForceCheck = true;
+				bForceCheck |= SetForcedAvoidGrowth(false);
 			}
 		}
 		else
 		{
-			if (IsForcedAvoidGrowth())
-			{
-				SetForcedAvoidGrowth(false);
-				bForceCheck = true;
-			}
+			bForceCheck |= SetForcedAvoidGrowth(false);
 		}
 	}
+
 #if defined(MOD_GLOBAL_CITY_AUTOMATON_WORKERS)
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(true), "Gameplay: More workers than population in the city.");
 #else
@@ -775,14 +590,16 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, SPrecomputedExpensiveNumbers sto
 			//how much do we value certain yields
 			if (eYield == YIELD_FOOD)
 			{
-				// if we have enough food and don't want to grow we care very little about extra food
-				// but we still care, extra food can help against unhappiness from distress!
-				if (store.iExcessFoodTimes100 > 0 && bAvoidGrowth)
-					iYield100 /= 20;
-
-				// If we have growth penalties, pretend the yield is lower
+				// if we have enough food we care little about extra food
 				if (store.iExcessFoodTimes100 > 0)
-					iYield100 += (iYield100*m_pCity->getGrowthMods()) / 100;
+				{
+					if (bAvoidGrowth)
+						// even if we don't want to grow we care a little, extra food can help against unhappiness from distress!
+						iYield100 /= 20;
+					else
+						// if we have growth penalties, pretend the yield is lower
+						iYield100 += (iYield100*m_pCity->getGrowthMods()) / 100;
+				}
 
 				if (eFocus == CITY_AI_FOCUS_TYPE_FOOD || bCityFoodProduction)
 					iYieldMod = GC.getAI_CITIZEN_VALUE_FOOD();
@@ -897,11 +714,9 @@ bool CvCityCitizens::IsAvoidGrowth()
 	{
 		return false;
 	}
-#if defined(MOD_BALANCE_CORE_HAPPINESS)
+
+	//failsafe for AI
 	if (!GetPlayer()->isHuman() && GetPlayer()->IsEmpireVeryUnhappy())
-#else
-	if (GetPlayer()->GetExcessHappiness() < 0)
-#endif
 	{
 		return true;
 	}
@@ -914,14 +729,18 @@ bool CvCityCitizens::IsForcedAvoidGrowth()
 	return m_bForceAvoidGrowth;
 }
 
-void CvCityCitizens::SetForcedAvoidGrowth(bool bAvoidGrowth, bool bReallocate)
+bool CvCityCitizens::SetForcedAvoidGrowth(bool bAvoidGrowth, bool bReallocate)
 {
 	if (m_bForceAvoidGrowth != bAvoidGrowth)
 	{
 		m_bForceAvoidGrowth = bAvoidGrowth;
 		if (bReallocate)
 			DoReallocateCitizens(true);
+
+		return true;
 	}
+
+	return false;
 }
 
 /// What is this city focusing on?
@@ -931,7 +750,7 @@ CityAIFocusTypes CvCityCitizens::GetFocusType() const
 }
 
 /// What is this city focusing on?
-void CvCityCitizens::SetFocusType(CityAIFocusTypes eFocus, bool bReallocate)
+bool CvCityCitizens::SetFocusType(CityAIFocusTypes eFocus, bool bReallocate)
 {
 	FAssert(eFocus >= NO_CITY_AI_FOCUS_TYPE);
 	FAssert(eFocus < NUM_CITY_AI_FOCUS_TYPES);
@@ -942,7 +761,10 @@ void CvCityCitizens::SetFocusType(CityAIFocusTypes eFocus, bool bReallocate)
 		// Reallocate with our new focus
 		if (bReallocate)
 			DoReallocateCitizens(true);
+		return true;
 	}
+
+	return false;
 }
 
 /// Does the AI want a Specialist?

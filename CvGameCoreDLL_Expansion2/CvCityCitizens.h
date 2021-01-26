@@ -62,9 +62,9 @@ public:
 
 	bool IsAvoidGrowth();
 	bool IsForcedAvoidGrowth();
-	void SetForcedAvoidGrowth(bool bAvoidGrowth, bool bReallocate = false);
+	bool SetForcedAvoidGrowth(bool bAvoidGrowth, bool bReallocate = false);
 	CityAIFocusTypes GetFocusType() const;
-	void SetFocusType(CityAIFocusTypes eFocus, bool bReallocate = false);
+	bool SetFocusType(CityAIFocusTypes eFocus, bool bReallocate = false);
 
 	// Specialist AI
 	bool IsAIWantSpecialistRightNow();

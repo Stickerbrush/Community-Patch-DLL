@@ -20907,6 +20907,7 @@ int CvPlayer::GetExcessHappiness() const
 /// Has the player passed the Happiness limit?
 bool CvPlayer::IsEmpireUnhappy() const
 {
+#if defined(MOD_BALANCE_CORE_HAPPINESS)
 	if(MOD_BALANCE_CORE_HAPPINESS_NATIONAL)
 	{
 		return (GetExcessHappiness() < GC.getUNHAPPY_THRESHOLD());
@@ -20915,12 +20916,16 @@ bool CvPlayer::IsEmpireUnhappy() const
 	{
 		return (GetExcessHappiness() < 0);
 	}
+#else
+	return (GetPlayer()->GetExcessHappiness() < 0);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
 /// Is the empire REALLY unhappy? (other penalties)
 bool CvPlayer::IsEmpireVeryUnhappy() const
 {
+#if defined(MOD_BALANCE_CORE_HAPPINESS)
 	if (MOD_BALANCE_CORE_HAPPINESS_NATIONAL)
 	{
 		return (GetExcessHappiness() < /*-10*/ GC.getVERY_UNHAPPY_THRESHOLD());
@@ -20929,12 +20934,16 @@ bool CvPlayer::IsEmpireVeryUnhappy() const
 	{
 		return (GetExcessHappiness() <= /*-10*/ GC.getVERY_UNHAPPY_THRESHOLD());
 	}
+#else
+	return (GetPlayer()->GetExcessHappiness() < -10);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
 /// Is the empire SUPER unhappy? (leads to revolts)
 bool CvPlayer::IsEmpireSuperUnhappy() const
 {
+#if defined(MOD_BALANCE_CORE_HAPPINESS)
 	if (MOD_BALANCE_CORE_HAPPINESS_NATIONAL)
 	{
 		return (GetExcessHappiness() < /*-10*/ GC.getSUPER_UNHAPPY_THRESHOLD());
@@ -20943,6 +20952,9 @@ bool CvPlayer::IsEmpireSuperUnhappy() const
 	{
 		return (GetExcessHappiness() <= /*-20*/ GC.getSUPER_UNHAPPY_THRESHOLD());
 	}
+#else
+	return (GetPlayer()->GetExcessHappiness() < -20);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -41158,21 +41170,10 @@ CvCity* CvPlayer::GetFirstCityWithBuildingClass(BuildingClassTypes eBuildingClas
 	int iLoop;
 	for(CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
 	{
-#if defined(MOD_BALANCE_CORE)
-		pLoopCity->HasBuildingClass(eBuildingClass);
-#else
-		const CvCivilizationInfo& playerCivilizationInfo = getCivilizationInfo();
-		BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)eBuildingClass);
-		if (eBuilding != NO_BUILDING)
-		{
-			if (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
-			{
-				return pLoopCity;
-			}
-		}
-#endif
+		if (pLoopCity->HasBuildingClass(eBuildingClass))
+			return pLoopCity;
 	}
-	return false;
+	return NULL;
 }
 
 //	--------------------------------------------------------------------------------
