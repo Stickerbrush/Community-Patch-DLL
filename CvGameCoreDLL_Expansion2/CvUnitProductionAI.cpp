@@ -1209,51 +1209,31 @@ int CvUnitProductionAI::CheckUnitBuildSanity(UnitTypes eUnit, bool bForOperation
 			return 0;
 		}
 
-		//There's a settler waiting here? Abort!
-		if (m_pCity->plot()->getNumUnitsOfAIType(UNITAI_SETTLE, m_pCity->getOwner()) > 0)
-		{
-			return 0;
-		}
-
 		if (kPlayer.isBarbarian() || kPlayer.GetPlayerTraits()->IsNoAnnexing() || (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && kPlayer.isHuman()))
 		{
 			return 0;
 		}
-		if (kPlayer.IsEmpireSuperUnhappy())
+
+		//Don't build a settler if we're about to grow.
+		if (m_pCity->getFoodTurnsLeft() <= 1)
 		{
 			return 0;
 		}
 
-		if (GC.getGame().getGameTurn() >= 50)
+		EconomicAIStrategyTypes eNoMoreExpand = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_ENOUGH_EXPANSION");
+		if (GET_PLAYER(m_pCity->getOwner()).GetEconomicAI()->IsUsingStrategy(eNoMoreExpand))
 		{
-			//Don't build a settler if we're about to grow.
-			if (m_pCity->getFoodTurnsLeft() <= 1)
-			{
-				return 0;
-			}
-
-			EconomicAIStrategyTypes eNoMoreExpand = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_ENOUGH_EXPANSION");
-			if (GET_PLAYER(m_pCity->getOwner()).GetEconomicAI()->IsUsingStrategy(eNoMoreExpand))
-			{
-				return 0;
-			}
-
-			//Or if we're small.
-			if (m_pCity->getPopulation() <= 3)
-			{
-				return 0;
-			}
+			return 0;
 		}
 
 		//Already have an idle settler out? Ignore.
 		int iNumSettlers = kPlayer.GetNumUnitsWithUnitAI(UNITAI_SETTLE, true, true);
-		if(iNumSettlers>0)
+		if (iNumSettlers>0 && kPlayer.getFirstAIOperationOfType(AI_OPERATION_FOUND_CITY)==NULL)
 		{
 			return 0;
 		}
 	
 		int iFlavorExpansion = kPlayer.GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
-		iFlavorExpansion -= kPlayer.getNumCities() * 5;
 
 		if (GET_TEAM(kPlayer.getTeam()).canEmbarkAllWaterPassage())
 		{
@@ -1276,7 +1256,7 @@ int CvUnitProductionAI::CheckUnitBuildSanity(UnitTypes eUnit, bool bForOperation
 		EconomicAIStrategyTypes eEarlyExpand = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EARLY_EXPANSION");
 		if (kPlayer.GetEconomicAI()->IsUsingStrategy(eEarlyExpand))
 		{
-			iFlavorExpansion += 50;
+			iFlavorExpansion += 70;
 			bRunningEarlyExpand = true;
 		}
 
@@ -1303,7 +1283,9 @@ int CvUnitProductionAI::CheckUnitBuildSanity(UnitTypes eUnit, bool bForOperation
 		{
 			iFlavorExpansion += 100 * iEraDifference;
 		}
-		if (kPlayer.IsAtWar())
+
+		//don't settle while at war
+		if (kPlayer.IsAtWarAnyMajor())
 		{
 			iFlavorExpansion -= 100;
 		}
@@ -1337,27 +1319,17 @@ int CvUnitProductionAI::CheckUnitBuildSanity(UnitTypes eUnit, bool bForOperation
 		if (!bRunningEarlyExpand)
 		{
 			AIGrandStrategyTypes eGrandStrategy = kPlayer.GetGrandStrategyAI()->GetActiveGrandStrategy();
-			bool bSeekingCultureVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE");
+			bool bSeekingCultureVictory = (eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
 			if (bSeekingCultureVictory)
 			{
 				iFlavorExpansion -= 25;
 			}
-			bool bSeekingSSVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP");
+			bool bSeekingSSVictory = (eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"));
 			if (bSeekingSSVictory)
 			{
 				iFlavorExpansion -= 25;
 			}
 		}
-
-		//bonuses for late founding units
-		if (pkUnitEntry->IsFoundMid())
-			iFlavorExpansion += 25;
-		else if (pkUnitEntry->GetNumColonyFound() > 0)
-			iFlavorExpansion += 50;
-		else if (pkUnitEntry->IsFoundLate())
-			iFlavorExpansion += 50;
-		else if (pkUnitEntry->IsFoundAbroad())
-			iFlavorExpansion += 50;
 
 		if (iFlavorExpansion <= 0)
 			return 0;
@@ -1384,6 +1356,7 @@ int CvUnitProductionAI::CheckUnitBuildSanity(UnitTypes eUnit, bool bForOperation
 
 		iBonus += iFlavorExpansion * (bRunningEarlyExpand ? 5 : 1);
 	}
+
 	if(!kPlayer.isMinorCiv())
 	{
 		//Archaeologists? Only if we have digs nearby.

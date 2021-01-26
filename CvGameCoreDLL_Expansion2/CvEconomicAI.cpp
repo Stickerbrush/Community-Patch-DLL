@@ -3396,8 +3396,17 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(EconomicAIStrategyTypes eS
 
 	//as long as it's within our "sphere of influence"
 	CvCity* pClosestCity = GC.getGame().GetClosestCityByPathLength(pSettlePlot, true);
-	if (pClosestCity && pClosestCity->getOwner() == pPlayer->GetID())
-		return true;
+	if (pClosestCity)
+	{
+		if (pClosestCity->getOwner() == pPlayer->GetID())
+			return true;
+
+		//check for near ties ...
+		int iTheirDist = GC.getGame().GetClosestCityDistancePathLength(pSettlePlot, true);
+		int iOurDist = pPlayer->GetCityDistancePathLength(pSettlePlot);
+		if (iOurDist <= iTheirDist + 1)
+			return true;
+	}
 
 	//if the neighbors are far away it's also good
 	int iOffset = 0;
