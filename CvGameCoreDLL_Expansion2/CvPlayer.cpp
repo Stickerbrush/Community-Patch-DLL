@@ -9819,6 +9819,9 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 	if (pNewCity == NULL)
 		return;
 
+	//do not use this anymore!
+	pCity = NULL;
+
 	// Now verify that the player is alive
 	GET_PLAYER(ePlayer).verifyAlive();
 
@@ -9837,11 +9840,11 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 			{
 				strMessage << getNameKey();
 			}
-			strMessage << pCity->getNameKey(); // CITY NAME
+			strMessage << pNewCity->getNameKey(); // CITY NAME
 			strMessage << GET_PLAYER(ePlayer).getCivilizationShortDescriptionKey();// RESTORED CIV NAME
 
 			Localization::String strSummary = Localization::Lookup("TXT_KEY_NOTIFICATION_CIV_LIBERATED_SHORT");
-			strSummary << pCity->getNameKey();
+			strSummary << pNewCity->getNameKey();
 			if (GC.getGame().isGameMultiPlayer() && GET_PLAYER(ePlayer).isHuman())
 			{
 				strSummary << GET_PLAYER(ePlayer).getNickName();
@@ -9856,7 +9859,7 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 				CvPlayerAI& kOtherPlayer = GET_PLAYER((PlayerTypes)iI);
 				if ((kOtherPlayer.isAlive() || kOtherPlayer.isObserver()) && kOtherPlayer.GetNotifications() && iI != m_eID)
 				{
-					kOtherPlayer.GetNotifications()->Add(NOTIFICATION_LIBERATED_MAJOR_CITY, strMessage.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), -1);
+					kOtherPlayer.GetNotifications()->Add(NOTIFICATION_LIBERATED_MAJOR_CITY, strMessage.toUTF8(), strSummary.toUTF8(), pNewCity->getX(), pNewCity->getY(), -1);
 				}
 			}
 		}
@@ -9998,7 +10001,7 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 			}
 
 			strMessage << getCivilizationShortDescriptionKey(); // LIBERATING CIV NAME
-			strMessage << pCity->getNameKey(); // CITY NAME
+			strMessage << pNewCity->getNameKey(); // CITY NAME
 			strMessage << GET_PLAYER(ePlayer).getCivilizationAdjectiveKey(); // LIBERATED CIV NAME
 			strMessage << GET_PLAYER(ePlayer).getCivilizationDescriptionKey();// LIBERATED CIV NAME
 			Localization::String strSummary = Localization::Lookup("TXT_KEY_NOTIFICATION_CIV_RESURRECTED_SHORT");
@@ -10025,7 +10028,7 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 				CvPlayerAI& kOtherPlayer = GET_PLAYER((PlayerTypes)iI);
 				if ((kOtherPlayer.isAlive() || kOtherPlayer.isObserver()) && kOtherPlayer.GetNotifications() && iI != m_eID)
 				{
-					kOtherPlayer.GetNotifications()->Add(NOTIFICATION_RESURRECTED_MAJOR_CIV, strMessage.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), -1);
+					kOtherPlayer.GetNotifications()->Add(NOTIFICATION_RESURRECTED_MAJOR_CIV, strMessage.toUTF8(), strSummary.toUTF8(), pNewCity->getX(), pNewCity->getY(), -1);
 				}
 			}
 
@@ -10065,7 +10068,7 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID, bool bForce
 
 		UnitTypes eUnit = GC.getGame().GetCompetitiveSpawnUnitType(ePlayer, false, false, false, true, false);
 		if (eUnit != NO_UNIT)
-			GET_PLAYER(ePlayer).initUnit(eUnit, pCity->getX(), pCity->getY());
+			GET_PLAYER(ePlayer).initUnit(eUnit, pNewCity->getX(), pNewCity->getY());
 	}
 
 	if (!bForced)
