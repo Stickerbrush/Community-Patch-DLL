@@ -2701,19 +2701,20 @@ CvPlot* CvPlayer::addFreeUnit(UnitTypes eUnit, UnitAITypes eUnitAI)
 		{
 			DirectionTypes eDirection;
 
-			bool bDirectionValid;
-			int iCount = 0;
+					bool bDirectionValid;
 
-			// Find a random direction
-			do
-			{
-				bDirectionValid = true;
+					int iCount = 0;
 
-				eDirection = (DirectionTypes)GC.getGame().getJonRandNum(NUM_DIRECTION_TYPES, "Placing Starting Units");
+					// Find a random direction
+					do
+					{
+						bDirectionValid = true;
 
-				if (bDirectionValid)
-				{
-					pLoopPlot = plotDirection(pStartingPlot->getX(), pStartingPlot->getY(), eDirection);
+						eDirection = (DirectionTypes)GC.getGame().getJonRandNum(NUM_DIRECTION_TYPES, "Placing Starting Units");
+
+						if (bDirectionValid)
+						{
+							pLoopPlot = plotDirection(pStartingPlot->getX(), pStartingPlot->getY(), eDirection);
 
 					if (pkUnitInfo->GetDomainType() == DOMAIN_SEA) 
 					{
@@ -3088,7 +3089,6 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 			// zero out any liberation credit since we just captured a city from them
 			if (pOldOwnerDiploAI->WasResurrectedBy(GetID()))
 			{
-				pOldOwnerDiploAI->SetResurrectorAttackedUs(GetID(), true);
 				pOldOwnerDiploAI->SetResurrectedBy(GetID(), false);
 
 				if (GET_TEAM(GET_PLAYER(pOldCity->getOwner()).getTeam()).GetLiberatedByTeam() == getTeam())
@@ -3650,7 +3650,7 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 	iBattleDamage = pOldCity->getDamage();
 
 	bool bReduce = true;
-	// Traded cities between teammates don't heal (an exploit would be to trade a city back and forth between teammates to get an instant heal.)
+	// Traded cities between humans don't heal (an exploit would be to trade a city back and forth between teammates to get an instant heal.)
 	if (bGift || GET_PLAYER(pOldCity->getOwner()).getTeam() != getTeam())
 		bReduce = false;
 
@@ -3867,13 +3867,13 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 	GC.getGame().addReplayMessage(REPLAY_MESSAGE_CITY_CAPTURED, m_eID, "", pCityPlot->getX(), pCityPlot->getY());
 
 	// Update Proximity between this Player and all others
-	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
 		PlayerTypes ePlayer = (PlayerTypes) iPlayerLoop;
 
-		if (ePlayer != m_eID)
+		if(ePlayer != m_eID)
 		{
-			if (GET_PLAYER(ePlayer).isAlive())
+			if(GET_PLAYER(ePlayer).isAlive())
 			{
 				GET_PLAYER(m_eID).DoUpdateProximityToPlayer(ePlayer);
 				GET_PLAYER(ePlayer).DoUpdateProximityToPlayer(m_eID);
@@ -9029,12 +9029,12 @@ void CvPlayer::DoEventChoice(EventChoiceTypes eEventChoice, EventTypes eEvent, b
 								int iLoop;
 								for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
 								{
-									if (pkEventChoiceInfo->isCoastalOnly() && !pLoopCity->isCoastal())
+									if(pkEventChoiceInfo->isCoastalOnly() && !pLoopCity->isCoastal())
 									{
 										continue;
 									}
 
-									if (pkEventChoiceInfo->isCapitalEffectOnly() && !pLoopCity->isCapital())
+									if(pkEventChoiceInfo->isCapitalEffectOnly() && !pLoopCity->isCapital())
 									{
 										continue;
 									}
@@ -10380,6 +10380,7 @@ void CvPlayer::disbandUnit(bool)
 				{
 					{
 						iValue = (10000 + GC.getGame().getSmallFakeRandNum(1000, pLoopUnit->GetID() + iLoop));
+
 						iValue += (pLoopUnit->getUnitInfo().GetProductionCost() * 5);
 						iValue += (pLoopUnit->getExperienceTimes100() / 100 * 20);
 						iValue += (pLoopUnit->getLevel() * 100);
@@ -11328,43 +11329,42 @@ void CvPlayer::doTurn()
 		}
 	}
 #endif
-
 	bool bHasActiveDiploRequest = false;
 	if (isAlive() && isMajorCiv())
 	{
 		GetTrade()->DoTurn();
 		GetGrandStrategyAI()->DoTurn();
 #if defined(MOD_ACTIVE_DIPLOMACY)
-		if(GC.getGame().isReallyNetworkMultiPlayer() && MOD_ACTIVE_DIPLOMACY)
-		{
-			GetDiplomacyAI()->DoTurn(DIPLO_AI_PLAYERS);
-		}
-		else
-		{
-			if(GC.getGame().isHotSeat() && !isHuman())
-			{
-				// In Hotseat, AIs only do their diplomacy pass for other AIs on their turn
-				// Diplomacy toward a human is done at the beginning of the humans turn.
-				GetDiplomacyAI()->DoTurn(DIPLO_AI_PLAYERS);		// Do diplomacy for toward everyone
-			}
-			else
-				GetDiplomacyAI()->DoTurn(DIPLO_ALL_PLAYERS);	// Do diplomacy for toward everyone
+				if(GC.getGame().isReallyNetworkMultiPlayer() && MOD_ACTIVE_DIPLOMACY)
+				{
+					GetDiplomacyAI()->DoTurn(DIPLO_AI_PLAYERS);
+				}
+				else
+				{
+					if(GC.getGame().isHotSeat() && !isHuman())
+					{
+						// In Hotseat, AIs only do their diplomacy pass for other AIs on their turn
+						// Diplomacy toward a human is done at the beginning of the humans turn.
+						GetDiplomacyAI()->DoTurn(DIPLO_AI_PLAYERS);		// Do diplomacy for toward everyone
+					}
+					else
+						GetDiplomacyAI()->DoTurn(DIPLO_ALL_PLAYERS);	// Do diplomacy for toward everyone
 
-			if (!isHuman())
-				bHasActiveDiploRequest = CvDiplomacyRequests::HasActiveDiploRequestWithHuman(GetID());
-		}
+					if (!isHuman())
+						bHasActiveDiploRequest = CvDiplomacyRequests::HasActiveDiploRequestWithHuman(GetID());
+				}
 #else
-		if(GC.getGame().isHotSeat() && !isHuman())
-		{
-			// In Hotseat, AIs only do their diplomacy pass for other AIs on their turn
-			// Diplomacy toward a human is done at the beginning of the humans turn.
-			GetDiplomacyAI()->DoTurn(CvDiplomacyAI::DIPLO_AI_PLAYERS);		// Do diplomacy for toward everyone
-		}
-		else
-			GetDiplomacyAI()->DoTurn(CvDiplomacyAI::DIPLO_ALL_PLAYERS);	// Do diplomacy for toward everyone
+				if(GC.getGame().isHotSeat() && !isHuman())
+				{
+					// In Hotseat, AIs only do their diplomacy pass for other AIs on their turn
+					// Diplomacy toward a human is done at the beginning of the humans turn.
+					GetDiplomacyAI()->DoTurn(CvDiplomacyAI::DIPLO_AI_PLAYERS);		// Do diplomacy for toward everyone
+				}
+				else
+					GetDiplomacyAI()->DoTurn(CvDiplomacyAI::DIPLO_ALL_PLAYERS);	// Do diplomacy for toward everyone
 
-		if (!isHuman())
-			bHasActiveDiploRequest = CvDiplomacyRequests::HasActiveDiploRequestWithHuman(GetID());
+				if (!isHuman())
+					bHasActiveDiploRequest = CvDiplomacyRequests::HasActiveDiploRequestWithHuman(GetID());
 #endif
 	}
 
@@ -13123,7 +13123,7 @@ bool CvPlayer::canReceiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit) 
 	}
 
 	// Population
-	if (kGoodyInfo.getPopulation() > 0)
+	if(kGoodyInfo.getPopulation() > 0)
 	{
 		if (getNumCities() == 0)
 			return false;
@@ -13183,7 +13183,6 @@ bool CvPlayer::canReceiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit) 
 		if (GC.getGame().getElapsedGameTurns() < 30)
 			return false;
 	}
-
 	//Free Tiles
 	if (kGoodyInfo.getFreeTiles() > 0)
 	{
@@ -17939,6 +17938,7 @@ int CvPlayer::GetNumUnitsSuppliedByCities(bool bIgnoreReduction) const
 	if (MOD_BALANCE_DYNAMIC_UNIT_SUPPLY)
 	{
 		int iStartingSupply = getHandicapInfo().getProductionFreeUnitsPerCity();
+		
 		int iValue = m_pTraits->GetExtraSupply();
 		int iLoop;
 		for (const CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
@@ -17950,7 +17950,7 @@ int CvPlayer::GetNumUnitsSuppliedByCities(bool bIgnoreReduction) const
 		if (!bIgnoreReduction)
 		{
 			int iTechProgress = (GET_TEAM(getTeam()).GetTeamTechs()->GetNumTechsKnown() * 100) / GC.getNumTechInfos();
-			if (iTechProgress >= 100)
+			if(iTechProgress >= 100)
 				iTechProgress = 100;
 			
 			iTechProgress *= 5;
@@ -17961,7 +17961,7 @@ int CvPlayer::GetNumUnitsSuppliedByCities(bool bIgnoreReduction) const
 		}
 		if (iValue < 0)
 			return 0;
-
+		
 		return iValue;
 	}
 #if defined(MOD_TRAITS_EXTRA_SUPPLY)
@@ -17980,6 +17980,7 @@ int CvPlayer::GetNumUnitsSuppliedByPopulation(bool bIgnoreReduction) const
 	if (MOD_BALANCE_DYNAMIC_UNIT_SUPPLY)
 	{
 		int iStartingSupply = getHandicapInfo().getProductionFreeUnitsPopulationPercent();
+		
 		int iValue = 0;
 		int iLoop;
 		for (const CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
@@ -18001,7 +18002,7 @@ int CvPlayer::GetNumUnitsSuppliedByPopulation(bool bIgnoreReduction) const
 		if (!bIgnoreReduction)
 		{
 			int iTechProgress = (GET_TEAM(getTeam()).GetTeamTechs()->GetNumTechsKnown() * 100) / GC.getNumTechInfos();
-			if (iTechProgress >= 100)
+			if(iTechProgress >= 100)
 				iTechProgress = 100;
 			
 			iTechProgress *= 7;
@@ -38742,7 +38743,6 @@ void CvPlayer::CheckForMonopoly(ResourceTypes eResource)
 	}
 }
 #endif
-
 //	--------------------------------------------------------------------------------
 /// Get the monopoly percentage owned for eResource.
 int CvPlayer::GetMonopolyPercent(ResourceTypes eResource) const
@@ -38797,7 +38797,6 @@ int CvPlayer::getCityYieldModFromMonopoly(YieldTypes eIndex) const
 
 	return m_aiCityYieldModFromMonopoly[eIndex];
 }
-
 void CvPlayer::changeCityYieldModFromMonopoly(YieldTypes eIndex, int iChange)
 {
 	CvAssertMsg(eIndex >= 0, "eIndex expected to be >= 0");
@@ -47155,6 +47154,7 @@ CvCity* CvPlayer::GetClosestCity(const CvPlot* pPlot, int iSearchRadius, bool bS
 }
 
 //	--------------------------------------------------------------------------------
+
 int CvPlayer::GetNumRealCities() const
 {
 	int iNum = 0;
@@ -47174,7 +47174,6 @@ int CvPlayer::GetNumRealCities() const
 
 	return iNum;
 }
-
 // How many Puppet Cities does this player own
 int CvPlayer::GetNumPuppetCities() const
 {
@@ -47192,7 +47191,6 @@ int CvPlayer::GetNumPuppetCities() const
 
 	return iNum;
 }
-
 #if defined(MOD_DIPLOMACY_CITYSTATES_RESOLUTIONS) || defined(MOD_BALANCE_CORE)
 //	--------------------------------------------------------------------------------
 // How many other Capital Cities does this player own
@@ -50086,7 +50084,6 @@ bool CvPlayer::HasUUActive()
 
 	int iLoop;
 	CvCivilizationInfo* pkInfo = GC.getCivilizationInfo(getCivilizationType());
-
 	if (pkInfo)
 	{
 		for (CvUnit* pLoopUnit = firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = nextUnit(&iLoop)) 

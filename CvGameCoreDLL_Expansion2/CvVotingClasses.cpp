@@ -7408,7 +7408,6 @@ void CvLeague::FinishSession()
 
 		LogProposalResolved(&(*it));
 	}
-
 	PlayerTypes eNewHost = GetHostMember();
 
 	// Update number of sessions held by consecutively by host
@@ -12619,7 +12618,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 				}
 			}
 		}
-
+		
 		if (GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() != NO_RELIGION && GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() != eTargetReligion)
 		{
 			if (bSeekingDiploVictory || bSeekingCultureVictory || GetPlayer()->GetPlayerTraits()->IsReligious())

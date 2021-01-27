@@ -1521,28 +1521,8 @@ public:
 	VassalTreatmentTypes GetVassalTreatmentLevel(PlayerTypes ePlayer) const;
 	CvString GetVassalTreatmentToolTip(PlayerTypes ePlayer) const;
 
-	int GetVassalScore(PlayerTypes ePlayer) const;
-	int GetMasterScore(PlayerTypes ePlayer) const;
-
-	int GetVassalTreatedScore(PlayerTypes ePlayer) const;
-	int GetVassalDemandScore(PlayerTypes ePlayer) const;
-	int GetVassalTaxScore(PlayerTypes ePlayer) const;
-	int GetVassalTradeRouteScore(PlayerTypes ePlayer) const;
-	int GetVassalReligionScore(PlayerTypes ePlayer) const;
-
 	bool IsWantToLiberateVassal(PlayerTypes ePlayer) const;
 	int GetMasterLiberatedMeFromVassalageScore(PlayerTypes ePlayer) const;
-
-	int GetVassalProtectScore(PlayerTypes ePlayer) const;
-	int GetHappyAboutVassalagePeacefullyRevokedScore(PlayerTypes ePlayer);
-	int GetAngryAboutVassalageForcefullyRevokedScore(PlayerTypes ePlayer);
-
-	int GetTooManyVassalsScore(PlayerTypes ePlayer) const;
-	int GetSameMasterScore(PlayerTypes ePlayer) const;
-
-	int GetBrokenVassalAgreementScore(PlayerTypes ePlayer) const;
-	
-	int GetVassalFailedProtectScore(PlayerTypes ePlayer) const;
 
 	bool IsVassalageAcceptable(PlayerTypes ePlayer, bool bWar = false);
 
@@ -1583,13 +1563,19 @@ public:
 	// Player asks the AI not to dig
 	bool IsStopDiggingAcceptable(PlayerTypes ePlayer) const;
 
+	MajorCivOpinionTypes GetNeighborOpinion(PlayerTypes ePlayer) const;
+	bool MusteringForNeighborAttack(PlayerTypes ePlayer) const;
+
 	/////////////////////////////////////////////////////////
 	// Opinion modifiers
 	/////////////////////////////////////////////////////////
+
 	int AdjustModifierDuration(bool bGood, int iDuration, int iFlavorValue = 0, bool bGamespeed = true);
 	int AdjustModifierValue(int iValue, int iDuration, int iTurn, ModifierTypes eModifierType, int iStacks = 1, int iFirstStackValue = 0);
 	void DoTestOpinionModifiers();
 	int GetBaseOpinionScore(PlayerTypes ePlayer);
+
+	// Dispute Levels
 	int GetLandDisputeLevelScore(PlayerTypes ePlayer);
 	int GetWonderDisputeLevelScore(PlayerTypes ePlayer);
 	int GetMinorCivDisputeLevelScore(PlayerTypes ePlayer);
@@ -1597,7 +1583,20 @@ public:
 	int GetPolicyBlockLevelScore(PlayerTypes ePlayer);
 	int GetVictoryDisputeLevelScore(PlayerTypes ePlayer);
 	int GetVictoryBlockLevelScore(PlayerTypes ePlayer);
+
+	// War Stuff
 	int GetWarmongerThreatScore(PlayerTypes ePlayer);
+	int GetTradeRoutesPlunderedScore(PlayerTypes ePlayer);
+	int GetCitiesRazedScore(PlayerTypes ePlayer);
+	int GetCitiesRazedGlobalScore(PlayerTypes ePlayer);
+	int GetNukedByScore(PlayerTypes ePlayer);
+	int GetHolyCityCapturedByScore(PlayerTypes ePlayer);
+	int GetCapitalCapturedByScore(PlayerTypes ePlayer);
+
+	// Player has done nice stuff
+	int GetRecentTradeScore(PlayerTypes ePlayer);
+	int GetRecentAssistScore(PlayerTypes ePlayer);
+	int GetCommonFoeScore(PlayerTypes ePlayer);
 	int GetCiviliansReturnedToMeScore(PlayerTypes ePlayer);
 	int GetLandmarksBuiltForMeScore(PlayerTypes ePlayer);
 	int GetResurrectedScore(PlayerTypes ePlayer);
@@ -1609,19 +1608,29 @@ public:
 	int GetEmbassyScore(PlayerTypes ePlayer);
 	int GetDiplomatScore(PlayerTypes ePlayer);
 	int GetForgaveForSpyingScore(PlayerTypes ePlayer);
-	int GetNoSettleRequestScore(PlayerTypes ePlayer);
-	int GetStopSpyingRequestScore(PlayerTypes ePlayer);
-	int GetDemandEverMadeScore(PlayerTypes ePlayer);
+	int GetTimesIntrigueSharedScore(PlayerTypes ePlayer);
+
+	// Player has done mean stuff
 	int GetTimesCultureBombedScore(PlayerTypes ePlayer);
-	int GetReligiousConversionPointsScore(PlayerTypes ePlayer);
-	int GetReligionScore(PlayerTypes ePlayer);
-	int GetIdeologyScore(PlayerTypes ePlayer);
 	int GetTimesRobbedScore(PlayerTypes ePlayer);
-	int GetTradeRoutesPlunderedScore(PlayerTypes ePlayer);
 	int GetTimesPlottedAgainstUsScore(PlayerTypes ePlayer);
 	int GetTimesPerformedCoupScore(PlayerTypes ePlayer);
 	int GetDugUpMyYardScore(PlayerTypes ePlayer);
-	int GetTimesIntrigueSharedScore(PlayerTypes ePlayer);
+
+	// Player has asked us to do things we don't like
+	int GetNoSettleRequestScore(PlayerTypes ePlayer);
+	int GetStopSpyingRequestScore(PlayerTypes ePlayer);
+	int GetDemandEverMadeScore(PlayerTypes ePlayer);
+
+	// Denouncing
+	int GetMutualDenouncementScore(PlayerTypes ePlayer);
+	int GetDenouncedUsScore(PlayerTypes ePlayer);
+	int GetDenouncedThemScore(PlayerTypes ePlayer);
+	int GetDenouncedFriendScore(PlayerTypes ePlayer);
+	int GetDenouncedEnemyScore(PlayerTypes ePlayer);
+	int GetDenouncedByOurFriendScore(PlayerTypes ePlayer);
+
+	// Promises
 	int GetBrokenMilitaryPromiseScore(PlayerTypes ePlayer);
 	int GetBrokenMilitaryPromiseWithAnybodyScore(PlayerTypes ePlayer);
 	int GetIgnoredMilitaryPromiseScore(PlayerTypes ePlayer);
@@ -1641,49 +1650,68 @@ public:
 	int GetBrokenSpyPromiseScore(PlayerTypes ePlayer);
 	int GetIgnoredSpyPromiseScore(PlayerTypes ePlayer);
 	int GetBrokenCoopWarPromiseScore(PlayerTypes ePlayer);
+
+	// Religion / Ideology
+	int GetPolicyScore(PlayerTypes ePlayer);
+	int GetReligiousConversionPointsScore(PlayerTypes ePlayer);
+	int GetReligionScore(PlayerTypes ePlayer);
+	int GetIdeologyScore(PlayerTypes ePlayer);
+
+	// Protected Minors
+	int GetPtPSameCSScore(PlayerTypes ePlayer);
 	int GetAngryAboutProtectedMinorKilledScore(PlayerTypes ePlayer);
 	int GetAngryAboutProtectedMinorAttackedScore(PlayerTypes ePlayer);
 	int GetAngryAboutProtectedMinorBulliedScore(PlayerTypes ePlayer);
 	int GetAngryAboutSidedWithProtectedMinorScore(PlayerTypes ePlayer);
+
+	// Declaration of Friendship
 	int GetDOFAcceptedScore(PlayerTypes ePlayer);
 	int GetDOFWithAnyFriendScore(PlayerTypes ePlayer);
 	int GetDOFWithAnyEnemyScore(PlayerTypes ePlayer);
-	int GetResearchAgreementScore(PlayerTypes ePlayer);
+
+	// Trade Agreements
 	int GetDPAcceptedScore(PlayerTypes ePlayer);
 	int GetDPWithAnyFriendScore(PlayerTypes ePlayer);
 	int GetDPWithAnyEnemyScore(PlayerTypes ePlayer);
 	int GetOpenBordersScore(PlayerTypes ePlayer);
-	MajorCivOpinionTypes GetNeighborOpinion(PlayerTypes ePlayer) const;
-	bool MusteringForNeighborAttack(PlayerTypes ePlayer) const;
+	int GetResearchAgreementScore(PlayerTypes ePlayer);
+
+	// Traitor Opinion
 	int GetFriendDenouncementScore(PlayerTypes ePlayer);
 	int GetWeDenouncedFriendScore(PlayerTypes ePlayer);
 	int GetFriendDenouncedUsScore(PlayerTypes ePlayer);
 	int GetWeDeclaredWarOnFriendScore(PlayerTypes ePlayer);
 	int GetFriendDeclaredWarOnUsScore(PlayerTypes ePlayer);
-	int GetMutualDenouncementScore(PlayerTypes ePlayer);
-	int GetDenouncedUsScore(PlayerTypes ePlayer);
-	int GetDenouncedThemScore(PlayerTypes ePlayer);
-	int GetDenouncedFriendScore(PlayerTypes ePlayer);
-	int GetDenouncedEnemyScore(PlayerTypes ePlayer);
-	int GetDenouncedByOurFriendScore(PlayerTypes ePlayer);
+	int GetResurrectorAttackedUsScore(PlayerTypes ePlayer);
+
+	// Reckless Expander / Wonder Spammer
 	int GetRecklessExpanderScore(PlayerTypes ePlayer);
 	int GetWonderSpammerScore(PlayerTypes ePlayer);
-	int GetRecentTradeScore(PlayerTypes ePlayer);
-	int GetCommonFoeScore(PlayerTypes ePlayer);
-	int GetRecentAssistScore(PlayerTypes ePlayer);
-	int GetNukedByScore(PlayerTypes ePlayer);
-	int GetCitiesRazedScore(PlayerTypes ePlayer);
-	int GetCitiesRazedGlobalScore(PlayerTypes ePlayer);
-	int GetPtPSameCSScore(PlayerTypes ePlayer);
-	int GetPolicyScore(PlayerTypes ePlayer);
-	int GetCapitalCapturedByScore(PlayerTypes ePlayer);
-	int GetHolyCityCapturedByScore(PlayerTypes ePlayer);
-	int GetResurrectorAttackedUsScore(PlayerTypes ePlayer);
+
+	// World Congress
 	int GetLeagueAlignmentScore(PlayerTypes ePlayer);
 	int GetLikedTheirProposalScore(PlayerTypes ePlayer);
 	int GetDislikedTheirProposalScore(PlayerTypes ePlayer);
 	int GetSupportedOurProposalScore(PlayerTypes ePlayer);
 	int GetSupportedMyHostingScore(PlayerTypes ePlayer);
+
+	// Vassalage
+	int GetVassalScore(PlayerTypes ePlayer) const;
+	int GetVassalTreatedScore(PlayerTypes ePlayer) const;
+	int GetVassalDemandScore(PlayerTypes ePlayer) const;
+	int GetVassalTaxScore(PlayerTypes ePlayer) const;
+	int GetVassalProtectScore(PlayerTypes ePlayer) const;
+	int GetVassalFailedProtectScore(PlayerTypes ePlayer) const;
+	int GetVassalTradeRouteScore(PlayerTypes ePlayer) const;
+	int GetVassalReligionScore(PlayerTypes ePlayer) const;
+	int GetMasterScore(PlayerTypes ePlayer) const;
+	int GetTooManyVassalsScore(PlayerTypes ePlayer) const;
+	int GetSameMasterScore(PlayerTypes ePlayer) const;
+	int GetHappyAboutVassalagePeacefullyRevokedScore(PlayerTypes ePlayer);
+	int GetAngryAboutVassalageForcefullyRevokedScore(PlayerTypes ePlayer);
+	int GetBrokenVassalAgreementScore(PlayerTypes ePlayer) const;
+
+	// Scenario-Specific
 #if defined(MOD_EVENTS_DIPLO_MODIFIERS)
 	int GetDiploModifiers(PlayerTypes ePlayer, std::vector<Opinion>& aOpinions);
 #endif

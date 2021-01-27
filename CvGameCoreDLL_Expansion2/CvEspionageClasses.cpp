@@ -304,6 +304,7 @@ void CvPlayerEspionage::Reset()
 	m_aHeistLocations = HeistLocationList(MAX_MAJOR_CIVS,vector<HeistLocation>());
 }
 
+
 /// DoTurn
 void CvPlayerEspionage::DoTurn()
 {
@@ -4085,7 +4086,6 @@ int CvPlayerEspionage::CalcPerTurn(int iSpyState, CvCity* pCity, int iSpyIndex)
 			iBaseYieldRate *= GC.getESPIONAGE_GATHERING_INTEL_RATE_BASE_PERCENT();
 			iBaseYieldRate /= 100;
 			iBaseYieldRate *= GC.getGame().getGameSpeedInfo().getSpyRatePercent();
-
 			int iCityEspionageModifier = pCity->GetEspionageModifier();
 			int iPlayerEspionageModifier = GET_PLAYER(eCityOwner).GetEspionageModifier();
 			int iTheirPoliciesEspionageModifier = GET_PLAYER(eCityOwner).GetPlayerPolicies()->GetNumericModifier(POLICYMOD_STEAL_TECH_SLOWER_MODIFIER);
@@ -4131,7 +4131,6 @@ int CvPlayerEspionage::CalcPerTurn(int iSpyState, CvCity* pCity, int iSpyIndex)
 			iBaseYieldRate *= GC.getESPIONAGE_GATHERING_INTEL_RATE_BASE_PERCENT();
 			iBaseYieldRate /= 100;
 			iBaseYieldRate *= GC.getGame().getGameSpeedInfo().getSpyRatePercent();
-
 			int iCityEspionageModifier = pCity->GetEspionageModifier();
 			int iPlayerEspionageModifier = GET_PLAYER(eCityOwner).GetEspionageModifier();
 			int iTheirPoliciesEspionageModifier = GET_PLAYER(eCityOwner).GetPlayerPolicies()->GetNumericModifier(POLICYMOD_STEAL_GW_SLOWER_MODIFIER);
@@ -5224,7 +5223,7 @@ int CvPlayerEspionage::GetNumTechsToSteal(PlayerTypes ePlayer)
 	return m_aiNumTechsToStealList[ePlayer];
 }
 #if defined(MOD_BALANCE_CORE)
-/// BuildStealableGWList - Go through opponents list and see what great works you can steal from them.
+/// BuildStealableGWList - Go through opponents list and see what techs you can steal from them.
 void CvPlayerEspionage::BuildStealableGWList(PlayerTypes ePlayer)
 {
 	CvAssertMsg((uint)ePlayer < m_aPlayerStealableGWList.size(), "ePlayer out of bounds");
@@ -5711,13 +5710,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -5795,13 +5794,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -5877,13 +5876,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -5957,13 +5956,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -6035,13 +6034,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -6115,13 +6114,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -6195,13 +6194,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -6273,13 +6272,13 @@ void CvPlayerEspionage::ProcessSpyMessages()
 
 						pNotifications->Add(NOTIFICATION_SPY_KILLED_A_SPY, strNotification.toUTF8(), strSummary.toUTF8(), pCity->getX(), pCity->getY(), m_aSpyNotificationMessages[ui].m_eAttackingPlayer);
 					
-#if !defined(NO_ACHIEVEMENTS)
+	#if !defined(NO_ACHIEVEMENTS)
 						//Achievements
 						if(m_pPlayer->GetID() == GC.getGame().getActivePlayer())
 						{
 							gDLL->UnlockAchievement(ACHIEVEMENT_XP1_15);
 						}
-#endif
+	#endif
 					}
 				}
 				break;
@@ -9625,7 +9624,7 @@ void CvEspionageAI::BuildMinorCityList(EspionageCityList& aMinorCityList)
 			{
 			case PLAN_PLAY_NORMAL:
 				// If we're not protective or friendly, then don't bother with minor diplo
-				if (eApproach == MINOR_CIV_APPROACH_PROTECTIVE || eApproach == MINOR_CIV_APPROACH_FRIENDLY)
+				if(eApproach == MINOR_CIV_APPROACH_PROTECTIVE || eApproach == MINOR_CIV_APPROACH_FRIENDLY)
 				{
 					// Nearly everyone likes to grow
 					if (pMinorCivAI->GetTrait() == MINOR_CIV_TRAIT_MARITIME && !m_pPlayer->IsEmpireUnhappy())
@@ -9647,19 +9646,19 @@ void CvEspionageAI::BuildMinorCityList(EspionageCityList& aMinorCityList)
 
 					// If they have a resource we don't have, add extra weight
 					int iResourcesWeLack = pMinorCivAI->GetNumResourcesMajorLacks(m_pPlayer->GetID());
-					if (iResourcesWeLack > 0)
+					if(iResourcesWeLack > 0)
 					{
-						iValue += (iResourcesWeLack * /*80*/ GC.getMC_GIFT_WEIGHT_RESOURCE_WE_NEED());
+						iValue += (iResourcesWeLack* /*80*/ GC.getMC_GIFT_WEIGHT_RESOURCE_WE_NEED());
 					}
 
 					// If we're protective this is worth more than if we're friendly
-					if (eApproach == MINOR_CIV_APPROACH_PROTECTIVE)
+					if(eApproach == MINOR_CIV_APPROACH_PROTECTIVE)
 					{
 						iValue += /*10*/ GC.getMC_GIFT_WEIGHT_PROTECTIVE();
 					}
 
 					// If the minor is hostile, then reduce the weighting
-					if (pMinorCivAI->GetPersonality() == MINOR_CIV_PERSONALITY_HOSTILE)
+					if(pMinorCivAI->GetPersonality() == MINOR_CIV_PERSONALITY_HOSTILE)
 					{
 						iValue += /*-20*/ GC.getMC_GIFT_WEIGHT_HOSTILE();
 					}

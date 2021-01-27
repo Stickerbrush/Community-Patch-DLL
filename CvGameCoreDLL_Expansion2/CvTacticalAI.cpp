@@ -1208,7 +1208,7 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 		CvUnit* pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit && pUnit->canUseForTacticalAI())
 		{
-			// try to flee or hide
+			// Danger value of plot must be greater than 0
 			int iDangerLevel = pUnit->GetDanger();
 			if(iDangerLevel > 0 || pUnit->plot()->isVisibleToEnemy(pUnit->getOwner()))
 			{
@@ -3415,12 +3415,12 @@ void CvTacticalAI::ExecuteAirSweep(CvPlot* pTargetPlot)
 	{
 		CvUnit* pUnit = m_pPlayer->getUnit(m_CurrentAirSweepUnits[iI].GetID());
 
-		if(pUnit && pUnit->canMove())
-		{
-			if(pUnit->canAirSweep())
+			if(pUnit && pUnit->canMove())
 			{
-				pUnit->PushMission(CvTypes::getMISSION_AIR_SWEEP(), pTargetPlot->getX(), pTargetPlot->getY());
-				UnitProcessed(m_CurrentAirSweepUnits[iI].GetID());
+				if(pUnit->canAirSweep())
+				{
+					pUnit->PushMission(CvTypes::getMISSION_AIR_SWEEP(), pTargetPlot->getX(), pTargetPlot->getY());
+					UnitProcessed(m_CurrentAirSweepUnits[iI].GetID());
 
 				if(GC.getLogging() && GC.getAILogging())
 				{
@@ -9548,7 +9548,7 @@ vector<STacticalAssignment> TacticalAIHelpers::FindBestDefensiveAssignment(const
 			{
 				CvPlot* pPlot = iterateRingPlots(pUnit->plot(), j);
 				if (pPlot && pPlot->isVisible(GET_PLAYER(ePlayer).getTeam()))
-					initialPosition->addTacticalPlot(pPlot,ourUnits);
+					initialPosition->addTacticalPlot(pPlot, ourUnits);
 			}
 		}
 	}
@@ -9802,7 +9802,7 @@ vector<STacticalAssignment> TacticalAIHelpers::FindBestOffensiveAssignment(
 	{
 		CvPlot* pPlot = iterateRingPlots(pTarget, i);
 		if (pPlot && pPlot->isVisible(ourTeam))
-			initialPosition->addTacticalPlot(pPlot, ourUnits);
+			initialPosition->addTacticalPlot(pPlot,ourUnits);
 	}
 
 	//find out which plot is frontline, second line etc

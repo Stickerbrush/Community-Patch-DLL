@@ -1553,13 +1553,7 @@ void CvDiplomacyAI::DoInitializeDiploPersonalityType()
 	int iScientistWeight = 0;
 
 	int ID = (int) GetID();
-	int iRandom = 4;
-
-	// Add more randomness if Random Personalities is active
-	if (GC.getGame().isOption(GAMEOPTION_RANDOM_PERSONALITIES))
-	{
-		iRandom *= 2;
-	}
+	int iRandom = GC.getGame().isOption(GAMEOPTION_RANDOM_PERSONALITIES) ? 20 : 10;
 
 	// Random seed to ensure the fake RNG doesn't return the same value repeatedly
 	int iSeed = 1;
@@ -1568,54 +1562,58 @@ void CvDiplomacyAI::DoInitializeDiploPersonalityType()
 
 	// Weight for conquest
 	iConquerorWeight += GetBoldness();
+	iConquerorWeight += GetMeanness();
 	iConquerorWeight += GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_WAR);
 	iConquerorWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE"));
 	iConquerorWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
-	iConquerorWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetBoldness() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_WAR) * iSeed) + ID));
+	iConquerorWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetBoldness() * GetMeanness() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_WAR) * ID) + iSeed));
 	iSeed += (iConquerorWeight * iRandom * ID);
 	iSeed *= 2;
 
 	// Weight for diplomacy
-	iDiplomatWeight += GetDoFWillingness();
 	iDiplomatWeight += GetLoyalty();
+	iDiplomatWeight += GetDiploBalance();
+	iDiplomatWeight += GetMinorCivCompetitiveness();
 	iDiplomatWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
 	iDiplomatWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GOLD"));
-	iDiplomatWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetDoFWillingness() * GetLoyalty() * iSeed) + ID));
+	iDiplomatWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetLoyalty() * GetDiploBalance() * GetMinorCivCompetitiveness() * ID) + iSeed));
 	iSeed += (iDiplomatWeight * iRandom * ID) + iConquerorWeight;
 	iSeed *= 2;
 
 	// Weight for culture
+	iCulturalWeight += GetDoFWillingness();
 	iCulturalWeight += GetWonderCompetitiveness();
 	iCulturalWeight += GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY);
 	iCulturalWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_WONDER"));
 	iCulturalWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
-	iCulturalWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetWonderCompetitiveness() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY) * iSeed) + ID));
+	iCulturalWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetDoFWillingness() * GetWonderCompetitiveness() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY) * ID) + iSeed));
 	iSeed += (iCulturalWeight * iRandom * ID) + iConquerorWeight + iDiplomatWeight;
 	iSeed *= 2;
 
 	// Weight for science
+	iScientistWeight += GetWarmongerHate();
 	iScientistWeight += GetDiploBalance();
 	iScientistWeight += GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_NEUTRAL);
 	iScientistWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
 	iScientistWeight += pFlavorMgr->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
-	iScientistWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetDiploBalance() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_NEUTRAL) * iSeed) + ID));
+	iScientistWeight += GC.getGame().getSmallFakeRandNum(iRandom, ((GetWarmongerHate() * GetDiploBalance() * GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_NEUTRAL) * ID) + iSeed));
 
 	// Add weight for leader traits
 	if (GetPlayer()->GetPlayerTraits()->IsWarmonger())
 	{
-		iConquerorWeight += 4;
+		iConquerorWeight += 5;
 	}
 	if (GetPlayer()->GetPlayerTraits()->IsDiplomat())
 	{
-		iDiplomatWeight += 4;
+		iDiplomatWeight += 5;
 	}
 	if (GetPlayer()->GetPlayerTraits()->IsTourism())
 	{
-		iCulturalWeight += 4;
+		iCulturalWeight += 5;
 	}
 	if (GetPlayer()->GetPlayerTraits()->IsNerd())
 	{
-		iScientistWeight += 4;
+		iScientistWeight += 5;
 	}
 	if (GetPlayer()->GetPlayerTraits()->IsExpansionist())
 	{
@@ -1633,11 +1631,11 @@ void CvDiplomacyAI::DoInitializeDiploPersonalityType()
 	// Insufficient minor civs?
 	if (GC.getGame().GetNumMinorCivsEver() < GC.getGame().countMajorCivsEverAlive())
 	{
-		iDiplomatWeight -= 4;
+		iDiplomatWeight -= 5;
 
 		if (GC.getGame().GetNumMinorCivsEver() == 0)
 		{
-			iDiplomatWeight -= 4;
+			iDiplomatWeight -= 5;
 		}
 	}
 
@@ -10200,6 +10198,13 @@ int CvDiplomacyAI::GetPlayerOverallStrengthEstimate(PlayerTypes ePlayer, PlayerT
 				if (GET_PLAYER(*it).IsNoNewWars())
 					continue;
 
+				// If this guy is a Defensive Pact of the player, check if it's relevant...
+				if (GET_PLAYER(*it).GetDiplomacyAI()->IsHasDefensivePact(ePlayer))
+				{
+					if (GET_PLAYER(ePlayer).IsAtWarWith(eComparedToPlayer) && !GET_PLAYER(*it).IsAtWarWith(eComparedToPlayer))
+						continue;
+				}
+
 				// How strong is this friend compared to the other guy?
 				switch (eThirdPartyStrength)
 				{
@@ -11334,7 +11339,7 @@ bool CvDiplomacyAI::IsWantsPeaceWithPlayer(PlayerTypes ePlayer) const
 			otherPlayerName = GET_PLAYER(ePlayer).getCivilizationShortDescription();
 			strBaseString += playerName + " VS. " + otherPlayerName;
 
-			strOutBuf.Format(" PEACE BLOCKED! ");
+			strOutBuf.Format("PEACE BLOCKED! ");
 			strOutBuf += strPeaceBlockReason;
 
 			strBaseString += strOutBuf;
@@ -14139,7 +14144,6 @@ int CvDiplomacyAI::GetMajorCivOpinionWeight(PlayerTypes ePlayer)
 	iOpinionWeight += GetPolicyBlockLevelScore(ePlayer);
 	iOpinionWeight += GetVictoryDisputeLevelScore(ePlayer);
 	iOpinionWeight += GetVictoryBlockLevelScore(ePlayer);
-	iOpinionWeight += GetAngryAboutSidedWithProtectedMinorScore(ePlayer);
 
 	//////////////////////////////////////
 	// WAR STUFF
@@ -14151,7 +14155,6 @@ int CvDiplomacyAI::GetMajorCivOpinionWeight(PlayerTypes ePlayer)
 	iOpinionWeight += GetNukedByScore(ePlayer);
 	iOpinionWeight += GetHolyCityCapturedByScore(ePlayer);
 	iOpinionWeight += GetCapitalCapturedByScore(ePlayer);
-	iOpinionWeight += GetResurrectorAttackedUsScore(ePlayer);
 
 	if (!IsVassal(ePlayer))
 		iOpinionWeight += (int)GetMilitaryAggressivePosture(ePlayer) * 5;
@@ -14254,6 +14257,7 @@ int CvDiplomacyAI::GetMajorCivOpinionWeight(PlayerTypes ePlayer)
 	iOpinionWeight += GetAngryAboutProtectedMinorKilledScore(ePlayer);
 	iOpinionWeight += GetAngryAboutProtectedMinorAttackedScore(ePlayer);
 	iOpinionWeight += GetAngryAboutProtectedMinorBulliedScore(ePlayer);
+	iOpinionWeight += GetAngryAboutSidedWithProtectedMinorScore(ePlayer);
 
 	//////////////////////////////////////
 	// DECLARATION OF FRIENDSHIP
@@ -14283,6 +14287,7 @@ int CvDiplomacyAI::GetMajorCivOpinionWeight(PlayerTypes ePlayer)
 	iTraitorOpinion = max(iTraitorOpinion, GetWeDeclaredWarOnFriendScore(ePlayer));
 	iTraitorOpinion = max(iTraitorOpinion, GetFriendDeclaredWarOnUsScore(ePlayer));
 	iOpinionWeight += iTraitorOpinion;
+	iOpinionWeight += GetResurrectorAttackedUsScore(ePlayer);
 
 	//////////////////////////////////////
 	// RECKLESS EXPANDER / WONDER SPAMMER
@@ -27455,7 +27460,7 @@ void CvDiplomacyAI::DoSendStatementToPlayer(PlayerTypes ePlayer, DiploStatementT
 
 				if (eResponse == COOP_WAR_STATE_REJECTED)
 				{
-					int iAssistPenalty = 100 - (GetDifferenceFromAverageFlavorValue(GetForgiveness()) * 10);
+					int iAssistPenalty = 100 - (GetDifferenceFromAverageFlavorValue(GetNeediness()) * 10);
 					ChangeRecentAssistValue(ePlayer, iAssistPenalty);
 					ChangeCoopWarScore(ePlayer, -1);
 				}
@@ -35980,7 +35985,7 @@ void CvDiplomacyAI::DoFromUIDiploEvent(PlayerTypes eFromPlayer, FromUIDiploEvent
 	case FROM_UI_DIPLO_EVENT_REQUEST_HUMAN_REFUSAL:
 	{
 		//If player is offended, AI should take note as penalty to assistance.
-		if (GetForgiveness() < 7 || GetNeediness() > 7)
+		if (GetNeediness() > 7)
 		{
 			ChangeRecentAssistValue(eFromPlayer, 150);
 		}
@@ -36959,7 +36964,7 @@ void CvDiplomacyAI::DoFromUIDiploEvent(PlayerTypes eFromPlayer, FromUIDiploEvent
 			// Small penalty for a normal refusal
 			if (iArg1 == 1)
 			{
-				int iAssistPenalty = 100 - (GetDifferenceFromAverageFlavorValue(GetForgiveness()) * 10);
+				int iAssistPenalty = 100 - (GetDifferenceFromAverageFlavorValue(GetNeediness()) * 10);
 				ChangeRecentAssistValue(eFromPlayer, iAssistPenalty);
 				ChangeCoopWarScore(eFromPlayer, -1);
 			}
@@ -37300,10 +37305,10 @@ void CvDiplomacyAI::DoFromUIDiploEvent(PlayerTypes eFromPlayer, FromUIDiploEvent
 		{
 			SetPlayerNoConvertPromiseState(eFromPlayer, PROMISE_STATE_MADE);
 
-			if (GetNegativeReligiousConversionPoints(eFromPlayer) >= GC.getRELIGION_DIPLO_HIT_THRESHOLD())
+			// Reduce their conversion points to a maximum since they agreed to withdraw
+			if (GetNegativeReligiousConversionPoints(eFromPlayer) >= /*4*/ GC.getRELIGION_DIPLO_HIT_THRESHOLD())
 			{
-				int iAdjustmentToJustBelowThreshold = (GC.getRELIGION_DIPLO_HIT_THRESHOLD() - 1);
-				SetNegativeReligiousConversionPoints(eFromPlayer, iAdjustmentToJustBelowThreshold);
+				SetNegativeReligiousConversionPoints(eFromPlayer, GC.getRELIGION_DIPLO_HIT_THRESHOLD());
 			}
 
 			if (bActivePlayer)
@@ -37892,7 +37897,7 @@ const char* CvDiplomacyAI::GetGreetHumanMessage(LeaderheadAnimationTypes& eAnima
 
 	// Most Greetings are added to a vector to be picked from randomly
 	// However, some are returned immediately, as they "fit" well enough that we DEFINITELY want to use that specific greeting
-	vector<DiploMessageTypes> veValidGreetings;
+	FStaticVector<DiploMessageTypes, NUM_DIPLO_MESSAGE_TYPES, true, c_eCiv5GameplayDLL, 0> veValidGreetings;
 
 	// Determine if the AI is being hostile to the player
 	bool bHostile = IsActHostileTowardsHuman(eHuman);
@@ -38572,7 +38577,7 @@ const char* CvDiplomacyAI::GetInsultHumanMessage()
 
 	StrengthTypes eMilitaryStrengthComparedToUs = GetPlayerMilitaryStrengthComparedToUs(ePlayer);
 
-	vector<DiploMessageTypes> veValidInsults;
+	FStaticVector<DiploMessageTypes, NUM_DIPLO_MESSAGE_TYPES, true, c_eCiv5GameplayDLL, 0> veValidInsults;
 
 	// They're weak militarily
 	if(eMilitaryStrengthComparedToUs <= STRENGTH_WEAK)
@@ -41328,10 +41333,8 @@ bool CvDiplomacyAI::IsDenounceAcceptable(PlayerTypes ePlayer, bool bBias)
 /// Returns the weight this AI has for denouncing ePlayer
 int CvDiplomacyAI::GetDenounceWeight(PlayerTypes ePlayer, bool bBias)
 {
-	int iWeight = 0;
-
 	// Base Personality value; ranges from 1 to 10
-	iWeight += GetDenounceWillingness();
+	int iWeight = GetDenounceWillingness();
 
 #if defined(MOD_DIPLOMACY_CIV4_FEATURES)
 	// Vassal treatment view
@@ -42191,7 +42194,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetCiviliansReturnedToMeTurn(ePlayer);
-			iDuration = AdjustModifierDuration(true, 50);
+			iDuration = AdjustModifierDuration(true, /*50*/ GC.getRETURNED_CIVILIAN_TURNS_UNTIL_FORGOTTEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42205,7 +42208,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetLandmarksBuiltForMeTurn(ePlayer);
-			iDuration = AdjustModifierDuration(true, 50);
+			iDuration = AdjustModifierDuration(true, /*50*/ GC.getBUILT_LANDMARK_TURNS_UNTIL_FORGOTTEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42219,7 +42222,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetLiberatedCitiesTurn(ePlayer);
-			iDuration = AdjustModifierDuration(true, 75);
+			iDuration = AdjustModifierDuration(true, /*75*/ GC.getLIBERATED_CITY_TURNS_UNTIL_FORGOTTEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42232,7 +42235,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (IsPlayerForgaveForSpying(ePlayer))
 		{
 			iTurnDifference = iTurn - GetForgaveForSpyingTurn(ePlayer);
-			iDuration = AdjustModifierDuration(true, 30);
+			iDuration = AdjustModifierDuration(true, /*30*/ GC.getFORGAVE_FOR_SPYING_TURNS_UNTIL_FORGOTTEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42245,7 +42248,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetDemandMadeTurn(ePlayer);
-			iDuration = AdjustModifierDuration(false, 50);
+			iDuration = AdjustModifierDuration(false, /*50*/ GC.getMADE_DEMAND_TURNS_UNTIL_FORGIVEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42270,7 +42273,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		{
 			iTurnDifference = iTurn - GetReligiousConversionTurn(ePlayer);
 			int iFlavorReligion = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
-			iDuration = AdjustModifierDuration(false, 50, iFlavorReligion);
+			iDuration = AdjustModifierDuration(false, /*50*/ GC.getRELIGIOUS_CONVERSION_TURNS_UNTIL_FORGIVEN(), iFlavorReligion);
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42284,7 +42287,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetRobbedTurn(ePlayer);
-			iDuration = AdjustModifierDuration(false, 50);
+			iDuration = AdjustModifierDuration(false, /*50*/ GC.getROBBED_US_TURNS_UNTIL_FORGIVEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42298,7 +42301,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetPlunderedTradeRouteTurn(ePlayer);
-			iDuration = AdjustModifierDuration(false, 25);
+			iDuration = AdjustModifierDuration(false, /*25*/ GC.getPLUNDERED_TRADE_ROUTE_TURNS_UNTIL_FORGIVEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42317,7 +42320,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 			iDurationMod *= 2;
 
 			iTurnDifference = iTurn - GetPlottedAgainstUsTurn(ePlayer);
-			iDuration = AdjustModifierDuration(false, 19, iDurationMod, false); // returns between 14 and 40 turns, inclusive, not scaling with gamespeed
+			iDuration = AdjustModifierDuration(false, /*19*/ GC.getPLOTTED_AGAINST_US_TURNS_UNTIL_FORGIVEN(), iDurationMod, false); // returns between 14 and 40 turns, inclusive, not scaling with gamespeed
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42331,7 +42334,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetPerformedCoupTurn(ePlayer);
-			iDuration = AdjustModifierDuration(false, 50, GetMinorCivCompetitiveness());
+			iDuration = AdjustModifierDuration(false, /*50*/ GC.getPERFORMED_COUP_TURNS_UNTIL_FORGIVEN(), GetMinorCivCompetitiveness());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42345,7 +42348,7 @@ void CvDiplomacyAI::DoTestOpinionModifiers()
 		if (iStacks > 0)
 		{
 			iTurnDifference = iTurn - GetIntrigueSharedTurn(ePlayer);
-			iDuration = AdjustModifierDuration(true, 50);
+			iDuration = AdjustModifierDuration(true, /*50*/ GC.getSHARED_INTRIGUE_TURNS_UNTIL_FORGOTTEN());
 
 			if (iTurnDifference >= iDuration)
 			{
@@ -42524,6 +42527,10 @@ int CvDiplomacyAI::GetBaseOpinionScore(PlayerTypes ePlayer)
 	return iOpinionWeight;
 }
 
+//////////////////////////////////////
+// DISPUTE MODIFIERS
+//////////////////////////////////////
+
 int CvDiplomacyAI::GetLandDisputeLevelScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
@@ -42582,10 +42589,10 @@ int CvDiplomacyAI::GetWonderDisputeLevelScore(PlayerTypes ePlayer)
 	switch (GetWonderDisputeLevel(ePlayer))
 	{
 	case DISPUTE_LEVEL_FIERCE:
-		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_WONDER_FIERCE();
+		iOpinionWeight += /*30*/ GC.getOPINION_WEIGHT_WONDER_FIERCE();
 		break;
 	case DISPUTE_LEVEL_STRONG:
-		iOpinionWeight += /*15*/ GC.getOPINION_WEIGHT_WONDER_STRONG();
+		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_WONDER_STRONG();
 		break;
 	case DISPUTE_LEVEL_WEAK:
 		iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_WONDER_WEAK();
@@ -42770,12 +42777,200 @@ int CvDiplomacyAI::GetVictoryBlockLevelScore(PlayerTypes ePlayer)
 	return iOpinionWeight;
 }
 
+//////////////////////////////////////
+// WAR STUFF
+//////////////////////////////////////
+
 int CvDiplomacyAI::GetWarmongerThreatScore(PlayerTypes ePlayer)
 {
 	if (IsAlwaysAtWar(ePlayer))
 		return 0;
 
 	return GetOtherPlayerWarmongerScore(ePlayer);
+}
+
+int CvDiplomacyAI::GetTradeRoutesPlunderedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iRoutesPlundered = GetNumTradeRoutesPlundered(ePlayer);
+
+	if (iRoutesPlundered > 0)
+	{
+		iOpinionWeight = (iRoutesPlundered * /*5*/ GC.getOPINION_WEIGHT_PLUNDERED_TRADE_ROUTE());
+
+		int iDuration = AdjustModifierDuration(false, /*25*/ GC.getPLUNDERED_TRADE_ROUTE_TURNS_UNTIL_FORGIVEN());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetPlunderedTradeRouteTurn(ePlayer), MODIFIER_TYPE_STACKED, iRoutesPlundered);
+	}
+	
+	return iOpinionWeight;
+}
+
+//todo
+int CvDiplomacyAI::GetCitiesRazedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	if (GetNumTimesRazed(ePlayer) > 0)
+	{
+		iOpinionWeight += (min(GetNumTimesRazed(ePlayer), /*50*/ GC.getOPINION_WEIGHT_CIVILIAN_KILLER_MAX()) * /*1*/ GC.getOPINION_WEIGHT_PER_CIVILIAN_KILLER_VALUE());
+	}
+
+	return iOpinionWeight;
+}
+
+//todo
+int CvDiplomacyAI::GetCitiesRazedGlobalScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	if (GetMajorCivOpinion(ePlayer) <= MAJOR_CIV_OPINION_NEUTRAL && !IsDoFAccepted(ePlayer) && !IsHasDefensivePact(ePlayer))
+	{
+		for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
+		{
+			PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
+			if (IsPlayerValid(eLoopPlayer, true) && eLoopPlayer != GetID() && GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->GetNumTimesRazed(ePlayer) >= 50)
+			{
+				MajorCivApproachTypes eApproach = GetMajorCivApproach(eLoopPlayer);
+				bool bDontCare = (WasEverBackstabbedBy(eLoopPlayer) || IsAtWar(eLoopPlayer) || IsDenouncedPlayer(eLoopPlayer) || IsDenouncedByPlayer(eLoopPlayer) || IsUntrustworthy(eLoopPlayer) || eApproach == MAJOR_CIV_APPROACH_AFRAID || eApproach <= MAJOR_CIV_APPROACH_DECEPTIVE || GetMajorCivOpinion(eLoopPlayer) <= MAJOR_CIV_OPINION_ENEMY);
+
+				if (!bDontCare)
+				{
+					iOpinionWeight = /*20*/ GC.getOPINION_WEIGHT_CIVILIAN_KILLER_WORLD();
+					break;
+				}
+			}
+		}
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetNukedByScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	if(IsNukedBy(ePlayer))
+	{
+		iOpinionWeight += /*100*/ GC.getOPINION_WEIGHT_NUKED_MAX();
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetHolyCityCapturedByScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	
+	if (IsHolyCityCapturedBy(ePlayer))
+	{
+		iOpinionWeight += /*80*/ GC.getOPINION_WEIGHT_CAPTURED_HOLY_CITY();
+	}
+
+	// Halve the weight if they willingly returned our Holy City.
+	if (IsPlayerReturnedHolyCity(ePlayer, true))
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_RETURNED_DIVISOR());
+	}
+
+	// If we're a well-treated capitulated vassal, halve the weight.
+	if (MOD_DIPLOMACY_CIV4_FEATURES && IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer) && GetVassalTreatmentLevel(ePlayer) <= VASSAL_TREATMENT_DISAGREE)
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_CAPITULATION_DIVISOR());
+	}
+	
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetCapitalCapturedByScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	
+	if (IsCapitalCapturedBy(ePlayer))
+	{
+		iOpinionWeight += /*160*/ GC.getOPINION_WEIGHT_CAPTURED_CAPITAL();
+	}
+
+	// Halve the weight if they willingly returned our capital.
+	if (IsPlayerReturnedCapital(ePlayer, true))
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_RETURNED_DIVISOR());
+	}
+
+	// If we're a well-treated capitulated vassal, halve the weight.
+	if (MOD_DIPLOMACY_CIV4_FEATURES && IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer) && GetVassalTreatmentLevel(ePlayer) <= VASSAL_TREATMENT_DISAGREE)
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_CAPITULATION_DIVISOR());
+	}
+	
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// Player has done nice stuff
+//////////////////////////////////////
+
+//todo
+int CvDiplomacyAI::GetRecentTradeScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	if (GetRecentTradeValue(ePlayer) > 0)
+	{
+		int iWeightChange = -1 * GetRecentTradeValue(ePlayer) / GC.getDEAL_VALUE_PER_OPINION_WEIGHT();
+		if(iWeightChange < /*-40*/ GC.getOPINION_WEIGHT_TRADE_MAX())
+		{
+			iWeightChange = GC.getOPINION_WEIGHT_TRADE_MAX();
+		}
+		iOpinionWeight +=  iWeightChange;
+	}
+
+	if (IsStrategicTradePartner(ePlayer))
+	{
+		iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_STRATEGIC_TRADE_PARTNER_MULTIPLIER();
+		iOpinionWeight /= 100;
+	}
+
+	return iOpinionWeight;
+}
+
+//todo
+int CvDiplomacyAI::GetRecentAssistScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	if(GetRecentAssistValue(ePlayer) != 0)
+	{
+		int iWeightChange = GetRecentAssistValue(ePlayer) / GC.getASSIST_VALUE_PER_OPINION_WEIGHT();
+		if (iWeightChange < /*-30*/ -GC.getOPINION_WEIGHT_ASSIST_MAX())
+		{
+			iWeightChange = -GC.getOPINION_WEIGHT_ASSIST_MAX();
+		}
+		else if (iWeightChange > /*30*/ GC.getOPINION_WEIGHT_ASSIST_MAX())
+		{
+			iWeightChange = GC.getOPINION_WEIGHT_ASSIST_MAX();
+		}
+		iOpinionWeight +=  iWeightChange;
+	}
+	
+	return iOpinionWeight;
+}
+
+//todo
+int CvDiplomacyAI::GetCommonFoeScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	if(GetCommonFoeValue(ePlayer) > 0)
+	{
+		int iWeightChange = -1 * GetCommonFoeValue(ePlayer) / GC.getCOMMON_FOE_VALUE_PER_OPINION_WEIGHT();
+		if(iWeightChange < /*-50*/ GC.getOPINION_WEIGHT_COMMON_FOE_MAX())
+		{
+			iWeightChange = GC.getOPINION_WEIGHT_COMMON_FOE_MAX();
+		}
+		iOpinionWeight +=  iWeightChange;
+	}	
+	return iOpinionWeight;
 }
 
 int CvDiplomacyAI::GetCiviliansReturnedToMeScore(PlayerTypes ePlayer)
@@ -42791,10 +42986,10 @@ int CvDiplomacyAI::GetCiviliansReturnedToMeScore(PlayerTypes ePlayer)
 		// Partial credit for any after first
 		if (iNumCivs > 1)
 		{
-			iOpinionWeight += ((GC.getOPINION_WEIGHT_RETURNED_CIVILIAN() / 2) * (iNumCivs - 1));
+			iOpinionWeight += /*-5*/ GC.getOPINION_WEIGHT_RETURNED_CIVILIAN_SUBSEQUENT() * (iNumCivs - 1);
 		}
 
-		int iDuration = AdjustModifierDuration(true, 50);
+		int iDuration = AdjustModifierDuration(true, /*50*/ GC.getRETURNED_CIVILIAN_TURNS_UNTIL_FORGOTTEN());
 		return AdjustModifierValue(iOpinionWeight, iDuration, GetCiviliansReturnedToMeTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumCivs, GC.getOPINION_WEIGHT_RETURNED_CIVILIAN());
 	}
 
@@ -42814,10 +43009,10 @@ int CvDiplomacyAI::GetLandmarksBuiltForMeScore(PlayerTypes ePlayer)
 		// Partial credit for any after first
 		if (iNumLandmarks > 1)
 		{
-			iOpinionWeight += ((GC.getOPINION_WEIGHT_BUILT_LANDMARK() / 3) * (iNumLandmarks - 1));
+			iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_BUILT_LANDMARK_SUBSEQUENT() * (iNumLandmarks - 1);
 		}
 
-		int iDuration = AdjustModifierDuration(true, 50);
+		int iDuration = AdjustModifierDuration(true, /*50*/ GC.getBUILT_LANDMARK_TURNS_UNTIL_FORGOTTEN());
 		return AdjustModifierValue(iOpinionWeight, iDuration, GetLandmarksBuiltForMeTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumLandmarks, GC.getOPINION_WEIGHT_BUILT_LANDMARK());
 	}
 
@@ -42836,13 +43031,15 @@ int CvDiplomacyAI::GetResurrectedScore(PlayerTypes ePlayer)
 	// Halve the weight if they captured our capital
 	if (IsCapitalCapturedBy(ePlayer, false, true, true))
 	{
-		iOpinionWeight /= 2;
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_LIBERATOR_CAPTURED_CAPITAL_DIVISOR());
 	}
 
 	// Halve the weight if they captured our Holy City.
 	if (IsHolyCityCapturedBy(ePlayer, false, true, true))
 	{
-		iOpinionWeight /= 2;
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_LIBERATOR_CAPTURED_HOLY_CITY_DIVISOR());
 	}
 
 	return iOpinionWeight;
@@ -42867,7 +43064,8 @@ int CvDiplomacyAI::GetLiberatedCapitalScore(PlayerTypes ePlayer)
 	// Halve the weight if they captured our Holy City.
 	if (IsHolyCityCapturedBy(ePlayer, false, true, true))
 	{
-		iOpinionWeight /= 2;
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_LIBERATOR_CAPTURED_HOLY_CITY_DIVISOR());
 	}
 
 	return iOpinionWeight;
@@ -42911,7 +43109,7 @@ int CvDiplomacyAI::GetLiberatedCitiesScore(PlayerTypes ePlayer)
 	if (iNumCitiesLiberated > 0)
 	{
 		int iLiberationValue = /*-30*/ GC.getOPINION_WEIGHT_LIBERATED_CITY() * iNumCitiesLiberated;
-		int iDuration = AdjustModifierDuration(true, 75);
+		int iDuration = AdjustModifierDuration(true, /*75*/ GC.getLIBERATED_CITY_TURNS_UNTIL_FORGOTTEN());
 		iOpinionWeight = AdjustModifierValue(iLiberationValue, iDuration, GetLiberatedCitiesTurn(ePlayer), MODIFIER_TYPE_STACKED, iNumCitiesLiberated);
 
 		// Double the weight if we're someone's vassal
@@ -42924,7 +43122,8 @@ int CvDiplomacyAI::GetLiberatedCitiesScore(PlayerTypes ePlayer)
 		// Halve the weight if they captured our Holy City.
 		if (IsHolyCityCapturedBy(ePlayer, false, true, true))
 		{
-			iOpinionWeight /= 2;
+			iOpinionWeight *= 100;
+			iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_LIBERATOR_CAPTURED_HOLY_CITY_DIVISOR());
 		}
 
 		// Reduce the weight if they've been capturing more of our cities than they've been liberating
@@ -42954,7 +43153,8 @@ int CvDiplomacyAI::GetReturnedCapitalScore(PlayerTypes ePlayer)
 	// Halve the weight if they captured our Holy City.
 	if (IsHolyCityCapturedBy(ePlayer, false, true, true))
 	{
-		iOpinionWeight /= 2;
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_LIBERATOR_CAPTURED_HOLY_CITY_DIVISOR());
 	}
 
 	return iOpinionWeight;
@@ -43001,9 +43201,19 @@ int CvDiplomacyAI::GetEmbassyScore(PlayerTypes ePlayer)
 
 int CvDiplomacyAI::GetDiplomatScore(PlayerTypes ePlayer)
 {
-	// No bonus for capitulated vassals
-	if (IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer) && !WasResurrectedBy(ePlayer))
-		return 0;
+	if (IsVassal(ePlayer) && !WasResurrectedBy(ePlayer))
+	{
+		if (IsVoluntaryVassalage(ePlayer))
+		{
+			if (GetVassalTreatmentLevel(ePlayer) > VASSAL_TREATMENT_DISAGREE)
+				return 0;
+		}
+		else
+		{
+			if (GetVassalTreatmentLevel(ePlayer) != VASSAL_TREATMENT_CONTENT)
+				return 0;
+		}
+	}
 
 	int iOpinionWeight = 0;
 
@@ -43029,12 +43239,140 @@ int CvDiplomacyAI::GetForgaveForSpyingScore(PlayerTypes ePlayer)
 	{
 		iOpinionWeight = /*-10*/ GC.getOPINION_WEIGHT_FORGAVE_FOR_SPYING();
 
-		int iDuration = AdjustModifierDuration(true, 30);
+		int iDuration = AdjustModifierDuration(true, /*30*/ GC.getFORGAVE_FOR_SPYING_TURNS_UNTIL_FORGOTTEN());
 		return AdjustModifierValue(iOpinionWeight, iDuration, GetForgaveForSpyingTurn(ePlayer), MODIFIER_TYPE_NORMAL);
 	}
 
 	return iOpinionWeight;
 }
+
+int CvDiplomacyAI::GetTimesIntrigueSharedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumIntrigue = GetNumTimesIntrigueSharedBy(ePlayer);
+
+	if (iNumIntrigue > 0)
+	{
+		// Full credit for first one
+		iOpinionWeight = /*-10*/ GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY();
+
+		// Partial credit for any after first
+		if (iNumIntrigue > 1)
+		{
+			iOpinionWeight = GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY_SUBSEQUENT() * (iNumIntrigue - 1);
+		}
+
+		int iDuration = AdjustModifierDuration(true, /*50*/ GC.getSHARED_INTRIGUE_TURNS_UNTIL_FORGOTTEN());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetIntrigueSharedTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumIntrigue, GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY());
+	}
+
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// Player has done mean stuff
+//////////////////////////////////////
+
+int CvDiplomacyAI::GetTimesCultureBombedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	if (GetNumTimesCultureBombed(ePlayer) > 0)
+		iOpinionWeight += (GetNumTimesCultureBombed(ePlayer) * /*10*/ GC.getOPINION_WEIGHT_CULTURE_BOMBED());
+	
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetTimesRobbedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iTimesRobbed = GetNumTimesRobbedBy(ePlayer);
+
+	if (iTimesRobbed > 0)
+	{
+		iOpinionWeight = (iTimesRobbed * /*20*/ GC.getOPINION_WEIGHT_ROBBED_BY());
+
+		int iDuration = AdjustModifierDuration(false, /*50*/ GC.getROBBED_US_TURNS_UNTIL_FORGIVEN());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetRobbedTurn(ePlayer), MODIFIER_TYPE_STACKED, iTimesRobbed);
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetTimesPlottedAgainstUsScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumPlots = GetNumTimesTheyPlottedAgainstUs(ePlayer);
+
+	if (iNumPlots > 0)
+	{
+		// Full penalty for first time
+		iOpinionWeight = /*20*/ GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US();
+
+		// Half penalty for subsequent times
+		if (iNumPlots > 1)
+		{
+			iOpinionWeight += GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US_SUBSEQUENT() * (iNumPlots - 1);
+		}
+
+		// Scale modifier duration based on military strength
+		int iDurationMod = (int)GetPlayerMilitaryStrengthComparedToUs(ePlayer); // between 0 and 7, inclusive
+		iDurationMod += ((int)GET_PLAYER(ePlayer).GetProximityToPlayer(GetID()) * 2); // between 0 and 6, inclusive
+		iDurationMod *= 2;
+		int iDuration = AdjustModifierDuration(false, /*19*/ GC.getPLOTTED_AGAINST_US_TURNS_UNTIL_FORGIVEN(), iDurationMod, false); // returns between 14 and 40 turns, inclusive, not scaling with gamespeed
+
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetPlottedAgainstUsTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumPlots, GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US());
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetTimesPerformedCoupScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumCoups = GetNumTimesPerformedCoupAgainstUs(ePlayer);
+
+	if (iNumCoups > 0)
+	{
+		iOpinionWeight = (iNumCoups * /*30*/ GC.getOPINION_WEIGHT_PERFORMED_COUP());
+
+		int iDuration = AdjustModifierDuration(false, /*50*/ GC.getPERFORMED_COUP_TURNS_UNTIL_FORGIVEN(), GetMinorCivCompetitiveness());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetPerformedCoupTurn(ePlayer), MODIFIER_TYPE_STACKED, iNumCoups);
+	}
+
+	return iOpinionWeight;
+}
+
+// todo
+int CvDiplomacyAI::GetDugUpMyYardScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNegativePoints = GetNegativeArchaeologyPoints(ePlayer);
+	
+	if (iNegativePoints > 100)
+	{
+		iOpinionWeight += /*40*/ GC.getOPINION_WEIGHT_EXCAVATED_THREE_ARTIFACTS();
+	}
+	else if (iNegativePoints > 50)
+	{
+		iOpinionWeight += /*30*/ GC.getOPINION_WEIGHT_EXCAVATED_TWO_ARTIFACTS();
+	}
+	else if (iNegativePoints > 0)
+	{
+		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_EXCAVATED_ONE_ARTIFACT();
+	}
+	
+	if (iOpinionWeight > 0 && IsPlayerMadeNoDiggingPromise(ePlayer))
+	{
+		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_MADE_NO_DIGGING_PROMISE_REDUCTION();
+	}
+	
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// Player has asked us to do things we don't like
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetNoSettleRequestScore(PlayerTypes ePlayer)
 {
@@ -43083,364 +43421,178 @@ int CvDiplomacyAI::GetDemandEverMadeScore(PlayerTypes ePlayer)
 		// Half penalty for every subsequent demand
 		if (iNumDemands > 1)
 		{
-			iOpinionWeight += (iNumDemands - 1) * (GC.getOPINION_WEIGHT_MADE_DEMAND_OF_US() / 2);
+			iOpinionWeight += GC.getOPINION_WEIGHT_MADE_DEMAND_OF_US_SUBSEQUENT() * (iNumDemands - 1);
 		}
 
-		int iDuration = AdjustModifierDuration(false, 50);
+		int iDuration = AdjustModifierDuration(false, /*50*/ GC.getMADE_DEMAND_TURNS_UNTIL_FORGIVEN());
 		return AdjustModifierValue(iOpinionWeight, iDuration, GetDemandMadeTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumDemands, GC.getOPINION_WEIGHT_MADE_DEMAND_OF_US());
 	}
 	
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetTimesCultureBombedScore(PlayerTypes ePlayer)
+//////////////////////////////////////
+// DENOUNCING
+//////////////////////////////////////
+
+int CvDiplomacyAI::GetMutualDenouncementScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
 
-	if (GetNumTimesCultureBombed(ePlayer) > 0)
-		iOpinionWeight += (GetNumTimesCultureBombed(ePlayer) * /*10*/ GC.getOPINION_WEIGHT_CULTURE_BOMBED());
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetReligiousConversionPointsScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iPoints = GetNegativeReligiousConversionPoints(ePlayer);
-
-	if (iPoints > 0)
+	// We denounced each other!
+	if (IsDenouncedPlayer(ePlayer) && IsDenouncedByPlayer(ePlayer))
 	{
-		iOpinionWeight = (GetNegativeReligiousConversionPoints(ePlayer) * GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisReligion() * /*2*/ GC.getOPINION_WEIGHT_PER_NEGATIVE_CONVERSION());
-
-		int iFlavorReligion = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
-		int iDuration = AdjustModifierDuration(false, 50, iFlavorReligion);
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetReligiousConversionTurn(ePlayer), MODIFIER_TYPE_STACKED, iPoints);
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetReligionScore(PlayerTypes ePlayer)
-{
-	if (GC.getGame().isOption(GAMEOPTION_NO_RELIGION)) return 0;
-	if (IsVassal(ePlayer)) return 0; // Vassals have their own function for this
-
-	int iOpinionWeight = 0;
-
-	ReligionTypes eOurStateReligion = GetPlayer()->GetReligions()->GetCurrentReligion(false);
-	ReligionTypes eOurMajorityReligion = GetPlayer()->GetReligions()->GetReligionInMostCities();
-	ReligionTypes eTheirStateReligion = GET_PLAYER(ePlayer).GetReligions()->GetCurrentReligion(false);
-	ReligionTypes eTheirMajorityReligion = GET_PLAYER(ePlayer).GetReligions()->GetReligionInMostCities();
-
-	int iFlavorReligion = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
-	int iEraMod = GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisReligion();
-
-	// Weight increases or decreases based on flavors
-	if (iFlavorReligion < 5)
-	{
-		iEraMod = max(0, iEraMod - 1);
-	}
-	else if (iFlavorReligion > 7)
-	{
-		iEraMod++;
-	}
-
-	iEraMod += GetPlayer()->GetPlayerTraits()->IsReligious() ? 1 : 0;
-
-	// We didn't found or conquer, but have a majority religion
-	if (eOurStateReligion == NO_RELIGION && eOurMajorityReligion != NO_RELIGION)
-	{
-		if (GetNegativeReligiousConversionPoints(ePlayer) <= 0 && !IsHolyCityCapturedBy(ePlayer))
-		{
-			if (eOurMajorityReligion == eTheirStateReligion)
-			{
-				// They must have at least one of their own cities following their state religion to get a bonus
-				if (GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eTheirStateReligion, ePlayer))
-				{
-					iOpinionWeight += /*-4*/ GC.getOPINION_WEIGHT_ADOPTING_HIS_RELIGION() * iEraMod;
-
-					// If it's the World Religion and they're its controller, support them since we get extra League votes from it
-					if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(ePlayer, eTheirStateReligion) > 0)
-					{
-						iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
-						iOpinionWeight /= 100;
-					}
-				}
-			}
-			// Same majority religions?
-			else if (eOurMajorityReligion == eTheirMajorityReligion)
-			{
-				iOpinionWeight += /*-2*/ GC.getOPINION_WEIGHT_SAME_MAJORITY_RELIGIONS() * iEraMod;
-			}
-		}
-		// Different majority religions?
-		if (eOurMajorityReligion != eTheirStateReligion && eOurMajorityReligion != eTheirMajorityReligion && eTheirMajorityReligion != NO_RELIGION)
-		{
-			iOpinionWeight += /*2*/ GC.getOPINION_WEIGHT_DIFFERENT_MAJORITY_RELIGIONS() * iEraMod;
-		}
-	}
-	// We founded or conquered
-	else if (eOurStateReligion != NO_RELIGION)
-	{
-		// Do they also have a state religion? We don't like that!
-		if (eTheirStateReligion != NO_RELIGION && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eTheirStateReligion, ePlayer))
-		{
-			iOpinionWeight += /*5*/ GC.getOPINION_WEIGHT_DIFFERENT_STATE_RELIGIONS() * iEraMod;
-
-			// If it's the World Religion and they control its Holy City, we should work against them
-			if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(ePlayer, eTheirStateReligion) > 0)
-			{
-				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
-				iOpinionWeight /= 100;
-			}
-		}
-		// No? Well, do they have a majority religion?
-		else if (eTheirMajorityReligion != NO_RELIGION)
-		{
-			// Ours?
-			if (eTheirMajorityReligion == eOurStateReligion)
-			{
-				iOpinionWeight += /*-8*/ GC.getOPINION_WEIGHT_ADOPTING_MY_RELIGION() * iEraMod;
-
-				// If it's the World Religion and we control its Holy City, we should work together
-				if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(GetID(), eOurStateReligion) > 0)
-				{
-					iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
-					iOpinionWeight /= 100;
-				}
-			}
-			// Someone else's?
-			else
-			{
-				const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(eTheirMajorityReligion, NO_PLAYER);
-
-				// If the religion's founder is our teammate, don't apply a penalty if that teammate is still alive.
-				if (IsTeammate((PlayerTypes)pReligion->m_eFounder) && GET_PLAYER((PlayerTypes)pReligion->m_eFounder).getNumCities() > 0)
-					return 0;
-
-				// If the religion's founder is THEIR teammate, treat it like a state religion.
-				if (GET_PLAYER(ePlayer).GetDiplomacyAI()->IsTeammate((PlayerTypes)pReligion->m_eFounder) && GET_PLAYER((PlayerTypes)pReligion->m_eFounder).getNumCities() > 0)
-				{
-					iOpinionWeight += /*5*/ GC.getOPINION_WEIGHT_DIFFERENT_STATE_RELIGIONS() * iEraMod;
-
-					// If it's the World Religion and their teammate controls its Holy City, we should work against them
-					if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier((PlayerTypes)pReligion->m_eFounder, eTheirMajorityReligion) > 0)
-					{
-						iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
-						iOpinionWeight /= 100;
-					}
-				}
-				// Otherwise, apply a penalty for different majority religions.
-				else
-				{
-					iOpinionWeight += /*2*/ GC.getOPINION_WEIGHT_DIFFERENT_MAJORITY_RELIGIONS() * iEraMod;
-				}
-			}
-		}
-	}
-
-	if (iOpinionWeight > 0 && IsIgnoreReligionDifferences(ePlayer))
-		return 0;
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetIdeologyScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	PolicyBranchTypes eMyBranch = m_pPlayer->GetPlayerPolicies()->GetLateGamePolicyTree();
-	PolicyBranchTypes eTheirBranch = GET_PLAYER(ePlayer).GetPlayerPolicies()->GetLateGamePolicyTree();
-	CvLeague* pLeague = GC.getGame().GetGameLeagues()->GetActiveLeague();
-
-	if (eMyBranch != NO_POLICY_BRANCH_TYPE && eTheirBranch != NO_POLICY_BRANCH_TYPE)
-	{
-		int iFlavorCulture = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
-		int iEraMod = GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisLatePolicies();
-
-		// Weight increases or decreases based on flavors
-		if (iFlavorCulture < 5)
-		{
-			iEraMod = max(0, iEraMod - 1);
-		}
-		else if (iFlavorCulture > 7)
-		{
-			iEraMod++;
-		}
-
-		iEraMod += (GetPlayer()->GetPlayerTraits()->IsTourism() || IsCultural()) ? 1 : 0;
-		iEraMod += IsCloseToCultureVictory() ? 1 : 0;
-
-		if (eMyBranch == eTheirBranch)
-		{
-			iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_SAME_LATE_POLICIES() * iEraMod;
-
-			// World Ideology modifier?
-			if (pLeague != NULL && pLeague->GetPressureForIdeology(eMyBranch) > 0)
-			{
-				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_MODIFIER();
-				iOpinionWeight /= 100;
-			}
-		}
-		else if (eMyBranch != eTheirBranch)
-		{
-			iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_DIFFERENT_LATE_POLICIES() * iEraMod;
-
-			// World Ideology modifier?
-			if (pLeague != NULL && (pLeague->GetPressureForIdeology(eMyBranch) > 0 || pLeague->GetPressureForIdeology(eTheirBranch) > 0))
-			{
-				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_MODIFIER();
-				iOpinionWeight /= 100;
-			}
-		}
-	}
-
-	if (iOpinionWeight > 0 && IsIgnoreIdeologyDifferences(ePlayer))
-		return 0;
-
-	// Vassals care less, since they're forced to adopt the master's ideology
-	if (IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer))
-	{
-		iOpinionWeight /= 2;
-	}
-	else if (!IsVassal(ePlayer) && GetPlayer()->IsVassalOfSomeone())
-	{
-		iOpinionWeight /= 2;
-	}
-	// Care less about vassals' ideologies, for the same reason
-	else if (GET_PLAYER(ePlayer).IsVassalOfSomeone())
-	{
-		iOpinionWeight /= 2;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetTimesRobbedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iTimesRobbed = GetNumTimesRobbedBy(ePlayer);
-
-	if (iTimesRobbed > 0)
-	{
-		iOpinionWeight = (iTimesRobbed * /*20*/ GC.getOPINION_WEIGHT_ROBBED_BY());
-
-		int iDuration = AdjustModifierDuration(false, 50);
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetRobbedTurn(ePlayer), MODIFIER_TYPE_STACKED, iTimesRobbed);
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetTradeRoutesPlunderedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iRoutesPlundered = GetNumTradeRoutesPlundered(ePlayer);
-
-	if (iRoutesPlundered > 0)
-	{
-		iOpinionWeight = (iRoutesPlundered * /*5*/ GC.getOPINION_WEIGHT_PLUNDERED_TRADE_ROUTE());
-
-		int iDuration = AdjustModifierDuration(false, 25);
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetPlunderedTradeRouteTurn(ePlayer), MODIFIER_TYPE_STACKED, iRoutesPlundered);
+		iOpinionWeight += /*50*/ GC.getOPINION_WEIGHT_MUTUAL_DENOUNCEMENT();
 	}
 	
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetTimesPlottedAgainstUsScore(PlayerTypes ePlayer)
+int CvDiplomacyAI::GetDenouncedUsScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
-	int iNumPlots = GetNumTimesTheyPlottedAgainstUs(ePlayer);
 
-	if (iNumPlots > 0)
+	// They denounced us!
+	if (IsDenouncedByPlayer(ePlayer) && !IsDenouncedPlayer(ePlayer))
 	{
-		// Full penalty for first time
-		iOpinionWeight = /*20*/ GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US();
+		iOpinionWeight += /*35*/ GC.getOPINION_WEIGHT_DENOUNCED_ME();
+	}
 
-		// Half penalty for subsequent times
-		if (iNumPlots > 1)
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetDenouncedThemScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	// We denounced them!
+	if (IsDenouncedPlayer(ePlayer) && !IsDenouncedByPlayer(ePlayer))
+	{
+		iOpinionWeight += /*35*/ GC.getOPINION_WEIGHT_DENOUNCED_THEM();
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetDenouncedFriendScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumFriendsDenounced = GetNumFriendsDenounced(ePlayer);
+
+	// They've denounced someone we have a DoF with
+	if (iNumFriendsDenounced > 0)
+	{
+		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DENOUNCED_FRIEND();
+
+		if (iNumFriendsDenounced > 1)
 		{
-			iOpinionWeight += ((iNumPlots - 1) * (GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US() / 2));
+			iOpinionWeight += /*8*/ GC.getOPINION_WEIGHT_DENOUNCED_FRIEND_SUBSEQUENT() * (iNumFriendsDenounced - 1);
+		}
+	}
+
+	PlayerTypes eBestFriend = GetMostValuableFriend();
+	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eBestFriend))
+	{
+		iOpinionWeight += /*15*/ GC.getOPINION_WEIGHT_DENOUNCED_MOST_VALUED_FRIEND();
+	}
+
+	eBestFriend = GetMostValuableAlly();
+	if (eBestFriend != NO_PLAYER && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eBestFriend))
+	{
+		iOpinionWeight += /*15*/ GC.getOPINION_WEIGHT_DENOUNCED_MOST_VALUED_ALLY();
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetDenouncedEnemyScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumEnemiesDenounced = GetNumEnemiesDenounced(ePlayer);
+
+	// They've denounced someone we've denounced
+	if (iNumEnemiesDenounced > 0)
+	{
+		iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_DENOUNCED_ENEMY();
+
+		if (iNumEnemiesDenounced > 1)
+		{
+			iOpinionWeight += /*-8*/ GC.getOPINION_WEIGHT_DENOUNCED_ENEMY_SUBSEQUENT() * (iNumEnemiesDenounced - 1);
+		}
+	}
+
+	PlayerTypes eWorstCompetitor = GetBiggestCompetitor();
+	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eWorstCompetitor))
+	{
+		if (IsDenouncedPlayer(eWorstCompetitor))
+		{
+			iOpinionWeight += /*-15*/ GC.getOPINION_WEIGHT_DENOUNCED_BIGGEST_COMPETITOR();
+		}
+	}
+
+	eWorstCompetitor = GetPrimeLeagueCompetitor();
+	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eWorstCompetitor))
+	{
+		if (IsDenouncedPlayer(eWorstCompetitor))
+		{
+			iOpinionWeight += /*-15*/ GC.getOPINION_WEIGHT_DENOUNCED_BIGGEST_LEAGUE_RIVAL();
+		}
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetDenouncedByOurFriendScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iNumDenouncements = 0;
+
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
+	{
+		PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
+		if (!GET_PLAYER(eLoopPlayer).isAlive() || GET_PLAYER(eLoopPlayer).getNumCities() <= 0)
+			continue;
+
+		if (!IsTeammate(eLoopPlayer))
+		{
+			if (GetDoFType(ePlayer) > GetDoFType(eLoopPlayer))
+				continue;
+
+			if (GetCachedOpinionWeight(ePlayer) <= GetCachedOpinionWeight(eLoopPlayer))
+				continue;
 		}
 
-		// Scale modifier duration based on military strength
-		int iDurationMod = (int)GetPlayerMilitaryStrengthComparedToUs(ePlayer); // between 0 and 7, inclusive
-		iDurationMod += ((int)GET_PLAYER(ePlayer).GetProximityToPlayer(GetID()) * 2); // between 0 and 6, inclusive
-		iDurationMod *= 2;
-		int iDuration = AdjustModifierDuration(false, 19, iDurationMod, false); // returns between 14 and 40 turns, inclusive, not scaling with gamespeed
-
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetPlottedAgainstUsTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumPlots, GC.getOPINION_WEIGHT_PLOTTED_AGAINST_US());
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetTimesPerformedCoupScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNumCoups = GetNumTimesPerformedCoupAgainstUs(ePlayer);
-
-	if (iNumCoups > 0)
-	{
-		iOpinionWeight = (iNumCoups * /*30*/ GC.getOPINION_WEIGHT_PERFORMED_COUP());
-
-		int iDuration = AdjustModifierDuration(false, 50, GetMinorCivCompetitiveness());
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetPerformedCoupTurn(ePlayer), MODIFIER_TYPE_STACKED, iNumCoups);
-	}
-
-	return iOpinionWeight;
-}
-
-// todo
-int CvDiplomacyAI::GetDugUpMyYardScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNegativePoints = GetNegativeArchaeologyPoints(ePlayer);
-	
-	if (iNegativePoints > 100)
-	{
-		iOpinionWeight += /*40*/ GC.getOPINION_WEIGHT_EXCAVATED_THREE_ARTIFACTS();
-	}
-	else if (iNegativePoints > 50)
-	{
-		iOpinionWeight += /*30*/ GC.getOPINION_WEIGHT_EXCAVATED_TWO_ARTIFACTS();
-	}
-	else if (iNegativePoints > 0)
-	{
-		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_EXCAVATED_ONE_ARTIFACT();
-	}
-	
-	if (iOpinionWeight > 0 && IsPlayerMadeNoDiggingPromise(ePlayer))
-	{
-		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_MADE_NO_DIGGING_PROMISE_REDUCTION();
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetTimesIntrigueSharedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNumIntrigue = GetNumTimesIntrigueSharedBy(ePlayer);
-
-	if (iNumIntrigue > 0)
-	{
-		// Full credit for first one
-		iOpinionWeight = /*-10*/ GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY();
-
-		// Partial credit for any after first
-		if (iNumIntrigue > 1)
+		if (GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedByPlayer(eLoopPlayer))
 		{
-			iOpinionWeight = ((iNumIntrigue - 1) * (GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY() / 2));
-		}
+			if (IsTeammate(eLoopPlayer) || IsDoFAccepted(eLoopPlayer) || IsHasDefensivePact(eLoopPlayer) || (GetDoFType(eLoopPlayer) >= DOF_TYPE_FRIENDS && GetMajorCivOpinion(eLoopPlayer) >= MAJOR_CIV_OPINION_NEUTRAL))
+			{
+				iNumDenouncements++;
+			}
 
-		int iDuration = AdjustModifierDuration(true, 50);
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetIntrigueSharedTurn(ePlayer), MODIFIER_TYPE_DIMINISHING, iNumIntrigue, GC.getOPINION_WEIGHT_INTRIGUE_SHARED_BY());
+			if (IsTeammate(eLoopPlayer) || (GetMostValuableFriend() == eLoopPlayer && IsDoFAccepted(eLoopPlayer)) || (GetMostValuableAlly() == eLoopPlayer && IsHasDefensivePact(eLoopPlayer)))
+			{
+				iOpinionWeight += /*15*/ GC.getOPINION_WEIGHT_DENOUNCED_BY_THEIR_KEY_FRIEND();
+			}
+		}
+	}
+
+	if (iNumDenouncements > 0)
+	{
+		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DENOUNCED_BY_THEIR_FRIEND();
+
+		if (iNumDenouncements > 1)
+		{
+			iOpinionWeight += /*8*/ GC.getOPINION_WEIGHT_DENOUNCED_BY_THEIR_FRIEND_SUBSEQUENT() * (iNumDenouncements - 1);
+		}
 	}
 
 	return iOpinionWeight;
 }
+
+//////////////////////////////////////
+// PROMISES
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetBrokenMilitaryPromiseScore(PlayerTypes ePlayer)
 {
@@ -43785,6 +43937,298 @@ int CvDiplomacyAI::GetBrokenCoopWarPromiseScore(PlayerTypes ePlayer)
 	return iOpinionWeight;
 }
 
+//////////////////////////////////////
+// RELIGION/IDEOLOGY
+//////////////////////////////////////
+
+int CvDiplomacyAI::GetPolicyScore(PlayerTypes ePlayer)
+{
+	if (GC.getGame().isOption(GAMEOPTION_NO_POLICIES))
+		return 0;
+
+	int iOpinionWeight = 0;
+	int iNumPolicies = GetNumSamePolicies(ePlayer);
+	
+	if (iNumPolicies < 0)
+	{
+		iOpinionWeight = max(/*10*/ GC.getOPINION_WEIGHT_DIVERGENT_POLICIES(), iNumPolicies * /*5*/ -GC.getOPINION_WEIGHT_PER_DIVERGENT_POLICY());
+	}
+	else if (iNumPolicies > 0)
+	{
+		iOpinionWeight = min(/*-10*/ GC.getOPINION_WEIGHT_SIMILAR_POLICIES(), iNumPolicies * /*-5*/ GC.getOPINION_WEIGHT_PER_SIMILAR_POLICY());
+	}
+	
+	if (GetNeediness() >= /*8*/ GC.getPOLICY_SCORE_NEEDY_THRESHOLD())
+	{
+		if (iOpinionWeight > 0)
+		{
+			iOpinionWeight += /*5*/ GC.getPOLICY_SCORE_NEEDY_BONUS();
+		}
+		else if (iOpinionWeight < 0)
+		{
+			iOpinionWeight += /*-5*/ -GC.getPOLICY_SCORE_NEEDY_BONUS();
+		}
+	}
+
+	if (iOpinionWeight > 0 && IsIgnorePolicyDifferences(ePlayer))
+		return 0;
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetReligionScore(PlayerTypes ePlayer)
+{
+	if (GC.getGame().isOption(GAMEOPTION_NO_RELIGION)) return 0;
+	if (IsVassal(ePlayer)) return 0; // Vassals have their own function for this
+
+	int iOpinionWeight = 0;
+
+	ReligionTypes eOurStateReligion = GetPlayer()->GetReligions()->GetCurrentReligion(false);
+	ReligionTypes eOurMajorityReligion = GetPlayer()->GetReligions()->GetReligionInMostCities();
+	ReligionTypes eTheirStateReligion = GET_PLAYER(ePlayer).GetReligions()->GetCurrentReligion(false);
+	ReligionTypes eTheirMajorityReligion = GET_PLAYER(ePlayer).GetReligions()->GetReligionInMostCities();
+
+	int iFlavorReligion = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
+	int iEraMod = GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisReligion();
+
+	// Weight increases or decreases based on flavors
+	if (iFlavorReligion < 5)
+	{
+		iEraMod = max(0, iEraMod - 1);
+	}
+	else if (iFlavorReligion > 7)
+	{
+		iEraMod++;
+	}
+
+	iEraMod += GetPlayer()->GetPlayerTraits()->IsReligious() ? 1 : 0;
+
+	// We didn't found or conquer, but have a majority religion
+	if (eOurStateReligion == NO_RELIGION && eOurMajorityReligion != NO_RELIGION)
+	{
+		if (GetNegativeReligiousConversionPoints(ePlayer) <= 0 && !IsHolyCityCapturedBy(ePlayer))
+		{
+			if (eOurMajorityReligion == eTheirStateReligion)
+			{
+				// They must have at least one of their own cities following their state religion to get a bonus
+				if (GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eTheirStateReligion, ePlayer))
+				{
+					iOpinionWeight += /*-4*/ GC.getOPINION_WEIGHT_ADOPTING_HIS_RELIGION() * iEraMod;
+
+					// If it's the World Religion and they're its controller, support them since we get extra League votes from it
+					if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(ePlayer, eTheirStateReligion) > 0)
+					{
+						iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
+						iOpinionWeight /= 100;
+					}
+				}
+			}
+			// Same majority religions?
+			else if (eOurMajorityReligion == eTheirMajorityReligion)
+			{
+				iOpinionWeight += /*-2*/ GC.getOPINION_WEIGHT_SAME_MAJORITY_RELIGIONS() * iEraMod;
+			}
+		}
+		// Different majority religions?
+		if (eOurMajorityReligion != eTheirStateReligion && eOurMajorityReligion != eTheirMajorityReligion && eTheirMajorityReligion != NO_RELIGION)
+		{
+			iOpinionWeight += /*2*/ GC.getOPINION_WEIGHT_DIFFERENT_MAJORITY_RELIGIONS() * iEraMod;
+		}
+	}
+	// We founded or conquered
+	else if (eOurStateReligion != NO_RELIGION)
+	{
+		// Do they also have a state religion? We don't like that!
+		if (eTheirStateReligion != NO_RELIGION && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eTheirStateReligion, ePlayer))
+		{
+			iOpinionWeight += /*5*/ GC.getOPINION_WEIGHT_DIFFERENT_STATE_RELIGIONS() * iEraMod;
+
+			// If it's the World Religion and they control its Holy City, we should work against them
+			if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(ePlayer, eTheirStateReligion) > 0)
+			{
+				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
+				iOpinionWeight /= 100;
+			}
+		}
+		// No? Well, do they have a majority religion?
+		else if (eTheirMajorityReligion != NO_RELIGION)
+		{
+			// Ours?
+			if (eTheirMajorityReligion == eOurStateReligion)
+			{
+				iOpinionWeight += /*-8*/ GC.getOPINION_WEIGHT_ADOPTING_MY_RELIGION() * iEraMod;
+
+				// If it's the World Religion and we control its Holy City, we should work together
+				if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier(GetID(), eOurStateReligion) > 0)
+				{
+					iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
+					iOpinionWeight /= 100;
+				}
+			}
+			// Someone else's?
+			else
+			{
+				const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(eTheirMajorityReligion, NO_PLAYER);
+
+				// If the religion's founder is our teammate, don't apply a penalty if that teammate is still alive.
+				if (IsTeammate((PlayerTypes)pReligion->m_eFounder) && GET_PLAYER((PlayerTypes)pReligion->m_eFounder).getNumCities() > 0)
+					return 0;
+
+				// If the religion's founder is THEIR teammate, treat it like a state religion.
+				if (GET_PLAYER(ePlayer).GetDiplomacyAI()->IsTeammate((PlayerTypes)pReligion->m_eFounder) && GET_PLAYER((PlayerTypes)pReligion->m_eFounder).getNumCities() > 0)
+				{
+					iOpinionWeight += /*5*/ GC.getOPINION_WEIGHT_DIFFERENT_STATE_RELIGIONS() * iEraMod;
+
+					// If it's the World Religion and their teammate controls its Holy City, we should work against them
+					if (GC.getGame().GetGameLeagues()->GetReligionSpreadStrengthModifier((PlayerTypes)pReligion->m_eFounder, eTheirMajorityReligion) > 0)
+					{
+						iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_RELIGION_MODIFIER();
+						iOpinionWeight /= 100;
+					}
+				}
+				// Otherwise, apply a penalty for different majority religions.
+				else
+				{
+					iOpinionWeight += /*2*/ GC.getOPINION_WEIGHT_DIFFERENT_MAJORITY_RELIGIONS() * iEraMod;
+				}
+			}
+		}
+	}
+
+	if (iOpinionWeight > 0 && IsIgnoreReligionDifferences(ePlayer))
+		return 0;
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetReligiousConversionPointsScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iPoints = GetNegativeReligiousConversionPoints(ePlayer);
+
+	if (iPoints > 0)
+	{
+		iOpinionWeight = (GetNegativeReligiousConversionPoints(ePlayer) * GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisReligion() * /*2*/ GC.getOPINION_WEIGHT_PER_NEGATIVE_CONVERSION());
+
+		int iFlavorReligion = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
+		int iDuration = AdjustModifierDuration(false, /*50*/ GC.getRELIGIOUS_CONVERSION_TURNS_UNTIL_FORGIVEN(), iFlavorReligion);
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetReligiousConversionTurn(ePlayer), MODIFIER_TYPE_STACKED, iPoints);
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetIdeologyScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	PolicyBranchTypes eMyBranch = m_pPlayer->GetPlayerPolicies()->GetLateGamePolicyTree();
+	PolicyBranchTypes eTheirBranch = GET_PLAYER(ePlayer).GetPlayerPolicies()->GetLateGamePolicyTree();
+	CvLeague* pLeague = GC.getGame().GetGameLeagues()->GetActiveLeague();
+
+	if (eMyBranch != NO_POLICY_BRANCH_TYPE && eTheirBranch != NO_POLICY_BRANCH_TYPE)
+	{
+		int iFlavorCulture = m_pPlayer->GetFlavorManager()->GetPersonalityFlavorForDiplomacy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
+		int iEraMod = GC.getEraInfo(GC.getGame().getCurrentEra())->getDiploEmphasisLatePolicies();
+
+		// Weight increases or decreases based on flavors
+		if (iFlavorCulture < 5)
+		{
+			iEraMod = max(0, iEraMod - 1);
+		}
+		else if (iFlavorCulture > 7)
+		{
+			iEraMod++;
+		}
+
+		iEraMod += (GetPlayer()->GetPlayerTraits()->IsTourism() || IsCultural()) ? 1 : 0;
+		iEraMod += IsCloseToCultureVictory() ? 1 : 0;
+
+		if (eMyBranch == eTheirBranch)
+		{
+			iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_SAME_LATE_POLICIES() * iEraMod;
+
+			// World Ideology modifier?
+			if (pLeague != NULL && pLeague->GetPressureForIdeology(eMyBranch) > 0)
+			{
+				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_MODIFIER();
+				iOpinionWeight /= 100;
+			}
+		}
+		else if (eMyBranch != eTheirBranch)
+		{
+			iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_DIFFERENT_LATE_POLICIES() * iEraMod;
+
+			// World Ideology modifier?
+			if (pLeague != NULL && (pLeague->GetPressureForIdeology(eMyBranch) > 0 || pLeague->GetPressureForIdeology(eTheirBranch) > 0))
+			{
+				iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_MODIFIER();
+				iOpinionWeight /= 100;
+			}
+		}
+	}
+
+	if (iOpinionWeight > 0 && IsIgnoreIdeologyDifferences(ePlayer))
+		return 0;
+
+	// Vassals care less, since they're forced to adopt the master's ideology
+	if (IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer))
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_VASSAL_DIVISOR());
+	}
+	else if (!IsVassal(ePlayer) && GetPlayer()->IsVassalOfSomeone())
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_VASSAL_DIVISOR());
+	}
+	// Care less about vassals' ideologies, for the same reason
+	else if (GET_PLAYER(ePlayer).IsVassalOfSomeone())
+	{
+		iOpinionWeight *= 100;
+		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_WORLD_IDEOLOGY_VASSAL_DIVISOR());
+	}
+
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// PROTECTED MINORS
+//////////////////////////////////////
+
+int CvDiplomacyAI::GetPtPSameCSScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iSamePtP = 0;
+
+	for (int iPlayerLoop = MAX_MAJOR_CIVS; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	{
+		PlayerTypes eMinorLoopPlayer = (PlayerTypes) iPlayerLoop;
+		if (eMinorLoopPlayer == NO_PLAYER)
+			continue;
+		
+		if (GET_PLAYER(eMinorLoopPlayer).isMinorCiv())
+		{
+			if (GET_PLAYER(eMinorLoopPlayer).GetMinorCivAI()->IsProtectedByMajor(ePlayer) && GET_PLAYER(eMinorLoopPlayer).GetMinorCivAI()->IsProtectedByMajor(GetID()))
+			{
+				iSamePtP++;
+			}
+		}
+	}
+	// Diplomatic civs apply a larger bonus for this if they're not being competed with.
+	if (IsDiplomat() && !IsMinorCivTroublemaker(ePlayer))
+	{
+		iSamePtP *= /*200*/ GC.getOPINION_WEIGHT_PTP_SAME_MINOR_DIPLOMAT_MULTIPLIER();
+		iSamePtP /= 100;
+	}
+	if (iSamePtP > 0)
+	{
+		iOpinionWeight += min(/*-12*/ GC.getOPINION_WEIGHT_PTP_SAME_MINOR_MIN(), (iSamePtP * /*-3*/ GC.getOPINION_WEIGHT_PTP_SAME_MINOR_EACH()));
+	}
+
+	return iOpinionWeight;
+}
+
 int CvDiplomacyAI::GetAngryAboutProtectedMinorKilledScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
@@ -43792,7 +44236,10 @@ int CvDiplomacyAI::GetAngryAboutProtectedMinorKilledScore(PlayerTypes ePlayer)
 	{
 		iOpinionWeight += /*40*/ GC.getOPINION_WEIGHT_KILLED_PROTECTED_MINOR();
 		if (GetOtherPlayerNumProtectedMinorsKilled(ePlayer) > 1)
-			iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_KILLED_MANY_PROTECTED_MINORS();
+			iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_KILLED_MANY_PROTECTED_MINORS();
+
+		int iDuration = AdjustModifierDuration(false, /*50*/ GC.getOPINION_WEIGHT_KILLED_PROTECTED_MINOR_NUM_TURNS_UNTIL_FORGIVEN(), GetPersonalityMinorCivApproachBias(MINOR_CIV_APPROACH_PROTECTIVE));
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetOtherPlayerKilledProtectedMinorTurn(ePlayer), MODIFIER_TYPE_NORMAL);
 	}
 	return iOpinionWeight;
 }
@@ -43864,17 +44311,114 @@ int CvDiplomacyAI::GetAngryAboutSidedWithProtectedMinorScore(PlayerTypes ePlayer
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetResearchAgreementScore(PlayerTypes ePlayer)
+//////////////////////////////////////
+// DECLARATION OF FRIENDSHIP
+//////////////////////////////////////
+
+int CvDiplomacyAI::GetDOFAcceptedScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
 
-	if (IsHasResearchAgreement(ePlayer))
+	if (IsDoFAccepted(ePlayer))
 	{
-		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_RA();
+		iOpinionWeight += /*-30*/ GC.getOPINION_WEIGHT_DOF();
+
+		if (GetMostValuableFriend() == ePlayer)
+		{
+			iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_DOF_MOST_VALUED_FRIEND();
+		}
+	}
+	else
+	{
+		// Were we previously friends?
+		switch (GetDoFType(ePlayer))
+		{
+		case DOF_TYPE_FRIENDS:
+			iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_DOF_TYPE_FRIENDS();
+			break;
+		case DOF_TYPE_ALLIES:
+			iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_DOF_TYPE_ALLIES();
+			break;
+		case DOF_TYPE_BATTLE_BROTHERS:
+			iOpinionWeight += /*-30*/ GC.getOPINION_WEIGHT_DOF_TYPE_BATTLE_BROTHERS();
+			break;
+		}
 	}
 
 	return iOpinionWeight;
 }
+
+int CvDiplomacyAI::GetDOFWithAnyFriendScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iMutualFriends = GetNumMutualFriends(ePlayer);
+
+	// They have a DoF with at least one other player we have a DoF with
+	if (iMutualFriends > 0)
+	{
+		iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_DOF_WITH_FRIEND();
+
+		if (iMutualFriends > 1)
+		{
+			iOpinionWeight += /*-8*/ GC.getOPINION_WEIGHT_DOF_WITH_FRIEND_SUBSEQUENT() * (iMutualFriends - 1);
+		}
+	}
+
+	PlayerTypes eBestFriend = GetMostValuableFriend();
+	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDoFAccepted(eBestFriend))
+	{
+		iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_DOF_WITH_MOST_VALUED_FRIEND();
+	}
+
+	eBestFriend = GetMostValuableAlly();
+	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDoFAccepted(eBestFriend))
+	{
+		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_DOF_WITH_MOST_VALUED_ALLY();
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetDOFWithAnyEnemyScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+	int iEnemyFriends = GetNumEnemyFriends(ePlayer);
+
+	// They have a DoF with at least one other player we have DENOUNCED or are AT WAR with
+	if (iEnemyFriends > 0)
+	{
+		iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DOF_WITH_ENEMY();
+
+		if (iEnemyFriends > 1)
+		{
+			iOpinionWeight += /*8*/ GC.getOPINION_WEIGHT_DOF_WITH_ENEMY_SUBSEQUENT() * (iEnemyFriends - 1);
+		}
+	}
+
+	PlayerTypes eWorstCompetitor = GetBiggestCompetitor();
+	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(eWorstCompetitor).GetDiplomacyAI()->IsDoFAccepted(ePlayer))
+	{
+		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
+		{
+			iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DOF_WITH_BIGGEST_COMPETITOR();
+		}
+	}
+
+	eWorstCompetitor = GetPrimeLeagueCompetitor();
+	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(eWorstCompetitor).GetDiplomacyAI()->IsDoFAccepted(ePlayer))
+	{
+		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
+		{
+			iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DOF_WITH_BIGGEST_LEAGUE_RIVAL();
+		}
+	}
+
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// TRADE AGREEMENTS
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetDPAcceptedScore(PlayerTypes ePlayer)
 {
@@ -43887,7 +44431,7 @@ int CvDiplomacyAI::GetDPAcceptedScore(PlayerTypes ePlayer)
 
 		if (GetMostValuableAlly() == ePlayer)
 		{
-			iOpinionWeight += -15;
+			iOpinionWeight += /*-15*/ GC.getOPINION_WEIGHT_DP_MOST_VALUED_ALLY();
 		}
 	}
 
@@ -43906,20 +44450,20 @@ int CvDiplomacyAI::GetDPWithAnyFriendScore(PlayerTypes ePlayer)
 
 		if (iMutualDefensePacts > 1)
 		{
-			iOpinionWeight += (iMutualDefensePacts - 1) * (GC.getOPINION_WEIGHT_DP_WITH_FRIEND() / 2);
+			iOpinionWeight += /*-5*/ GC.getOPINION_WEIGHT_DP_WITH_FRIEND_SUBSEQUENT() * (iMutualDefensePacts - 1);
 		}
 	}
 
-	PlayerTypes eBestFriend = GetMostValuableFriend();
-	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsHasDefensivePact(eBestFriend))
-	{
-		iOpinionWeight += -5;
-	}
-
-	eBestFriend = GetMostValuableAlly();
+	PlayerTypes eBestFriend = GetMostValuableAlly();
 	if (eBestFriend != NO_PLAYER && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsHasDefensivePact(eBestFriend))
 	{
-		iOpinionWeight += -10;
+		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_DP_WITH_MOST_VALUED_ALLY();
+	}
+
+	eBestFriend = GetMostValuableFriend();
+	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsHasDefensivePact(eBestFriend))
+	{
+		iOpinionWeight += /*-5*/ GC.getOPINION_WEIGHT_DP_WITH_MOST_VALUED_FRIEND();
 	}
 
 	return iOpinionWeight;
@@ -43937,7 +44481,7 @@ int CvDiplomacyAI::GetDPWithAnyEnemyScore(PlayerTypes ePlayer)
 
 		if (iEnemyDefensePacts > 1)
 		{
-			iOpinionWeight += (iEnemyDefensePacts - 1) * (GC.getOPINION_WEIGHT_DP_WITH_ENEMY() / 2);
+			iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_DP_WITH_ENEMY() * (iEnemyDefensePacts - 1);
 		}
 	}
 
@@ -43946,7 +44490,7 @@ int CvDiplomacyAI::GetDPWithAnyEnemyScore(PlayerTypes ePlayer)
 	{
 		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
 		{
-			iOpinionWeight += 20;
+			iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DP_WITH_BIGGEST_COMPETITOR();
 		}
 	}
 
@@ -43955,7 +44499,7 @@ int CvDiplomacyAI::GetDPWithAnyEnemyScore(PlayerTypes ePlayer)
 	{
 		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
 		{
-			iOpinionWeight += 20;
+			iOpinionWeight += /*20*/ GC.getOPINION_WEIGHT_DP_WITH_BIGGEST_LEAGUE_RIVAL();
 		}
 	}
 
@@ -43968,11 +44512,24 @@ int CvDiplomacyAI::GetOpenBordersScore(PlayerTypes ePlayer)
 
 	bool bTheyAllow = IsHasOpenBorders(ePlayer);
 	bool bWeAllow = GET_PLAYER(ePlayer).GetDiplomacyAI()->IsHasOpenBorders(GetID());
-	bool bVassal = IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer) && !WasResurrectedBy(ePlayer);
+	bool bVassalPenalty = false;
+	if (IsVassal(ePlayer) && !WasResurrectedBy(ePlayer))
+	{
+		if (IsVoluntaryVassalage(ePlayer))
+		{
+			if (GetVassalTreatmentLevel(ePlayer) > VASSAL_TREATMENT_DISAGREE)
+				bVassalPenalty = true;
+		}
+		else
+		{
+			if (GetVassalTreatmentLevel(ePlayer) != VASSAL_TREATMENT_CONTENT)
+				bVassalPenalty = true;
+		}
+	}
 
 	if (bWeAllow && bTheyAllow)
 	{
-		iOpinionWeight = bVassal ? /*-8*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_US() : /*-12*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_MUTUAL();
+		iOpinionWeight = bVassalPenalty ? /*-8*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_US() : /*-12*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_MUTUAL();
 	}
 	else if (bTheyAllow)
 	{
@@ -43980,156 +44537,32 @@ int CvDiplomacyAI::GetOpenBordersScore(PlayerTypes ePlayer)
 	}
 	else if (bWeAllow)
 	{
-		iOpinionWeight = bVassal ? 0 : /*-4*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_THEM();
+		iOpinionWeight = bVassalPenalty ? 0 : /*-4*/ GC.getOPINION_WEIGHT_OPEN_BORDERS_THEM();
 	}
 
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetDOFAcceptedScore(PlayerTypes ePlayer)
+int CvDiplomacyAI::GetResearchAgreementScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
 
-	if (IsDoFAccepted(ePlayer))
+	if (IsHasResearchAgreement(ePlayer))
 	{
-		iOpinionWeight += /*-30*/ GC.getOPINION_WEIGHT_DOF();
+		iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_RA();
 
-		if (GetMostValuableFriend() == ePlayer)
+		if (IsScientist())
 		{
-			iOpinionWeight += -20;
-		}
-	}
-	else
-	{
-		switch (GetDoFType(ePlayer))
-		{
-		case DOF_TYPE_FRIENDS:
-			iOpinionWeight += -10;
-			break;
-		case DOF_TYPE_ALLIES:
-			iOpinionWeight += -20;
-			break;
-		case DOF_TYPE_BATTLE_BROTHERS:
-			iOpinionWeight += -30;
-			break;
+			iOpinionWeight += /*-10*/ GC.getOPINION_WEIGHT_RA_SCIENTIFIC_MOD();
 		}
 	}
 
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetDOFWithAnyFriendScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iMutualFriends = GetNumMutualFriends(ePlayer);
-
-	// They have a DoF with at least one other player we have a DoF with
-	if (iMutualFriends > 0)
-	{
-		iOpinionWeight += /*-18*/ GC.getOPINION_WEIGHT_DOF_WITH_FRIEND();
-
-		if (iMutualFriends > 1)
-		{
-			iOpinionWeight += (iMutualFriends - 1) * (GC.getOPINION_WEIGHT_DOF_WITH_FRIEND() / 3);
-		}
-	}
-
-	PlayerTypes eBestFriend = GetMostValuableFriend();
-	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDoFAccepted(eBestFriend))
-	{
-		iOpinionWeight += -18;
-	}
-
-	eBestFriend = GetMostValuableAlly();
-	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDoFAccepted(eBestFriend))
-	{
-		iOpinionWeight += -9;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetDOFWithAnyEnemyScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iEnemyFriends = GetNumEnemyFriends(ePlayer);
-
-	// They have a DoF with at least one other player we have DENOUNCED or are AT WAR with
-	if (iEnemyFriends > 0)
-	{
-		iOpinionWeight += /*18*/ GC.getOPINION_WEIGHT_DOF_WITH_ENEMY();
-
-		if (iEnemyFriends > 1)
-		{
-			iOpinionWeight += (iEnemyFriends - 1) * (GC.getOPINION_WEIGHT_DOF_WITH_ENEMY());
-		}
-	}
-
-	PlayerTypes eWorstCompetitor = GetBiggestCompetitor();
-	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(eWorstCompetitor).GetDiplomacyAI()->IsDoFAccepted(ePlayer))
-	{
-		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
-		{
-			iOpinionWeight += 18;
-		}
-	}
-
-	eWorstCompetitor = GetPrimeLeagueCompetitor();
-	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(eWorstCompetitor).GetDiplomacyAI()->IsDoFAccepted(ePlayer))
-	{
-		if (IsDenouncedPlayer(eWorstCompetitor) || IsAtWar(eWorstCompetitor))
-		{
-			iOpinionWeight += 18;
-		}
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetDenouncedByOurFriendScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNumDenouncements = 0;
-
-	for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
-	{
-		PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
-
-		if (!GET_PLAYER(eLoopPlayer).isAlive() || GET_PLAYER(eLoopPlayer).getNumCities() <= 0)
-			continue;
-
-		if (GetDoFType(ePlayer) > GetDoFType(eLoopPlayer))
-			continue;
-
-		if (GetCachedOpinionWeight(ePlayer) <= GetCachedOpinionWeight(eLoopPlayer))
-			continue;
-
-		if (GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedByPlayer(eLoopPlayer))
-		{
-			if (IsDoFAccepted(eLoopPlayer) || IsHasDefensivePact(eLoopPlayer) || (GetDoFType(eLoopPlayer) >= DOF_TYPE_FRIENDS && GetMajorCivOpinion(eLoopPlayer) >= MAJOR_CIV_OPINION_NEUTRAL))
-			{
-				iNumDenouncements++;
-			}
-
-			if ((GetMostValuableFriend() == eLoopPlayer && IsDoFAccepted(eLoopPlayer)) || (GetMostValuableAlly() == eLoopPlayer && IsHasDefensivePact(eLoopPlayer)))
-			{
-				iOpinionWeight += 20;
-			}
-		}
-	}
-
-	if (iNumDenouncements > 0)
-	{
-		iOpinionWeight += 20;
-
-		if (iNumDenouncements > 1)
-		{
-			iOpinionWeight += (iNumDenouncements - 1) * 10;
-		}
-	}
-
-	return iOpinionWeight;
-}
+//////////////////////////////////////
+// TRAITOR OPINION
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetFriendDenouncementScore(PlayerTypes ePlayer)
 {
@@ -44155,7 +44588,10 @@ int CvDiplomacyAI::GetFriendDenouncementScore(PlayerTypes ePlayer)
 					int iPenalty = /*20*/ GC.getOPINION_WEIGHT_DENOUNCED_BY_FRIEND_EACH();
 
 					if (IsFriendOrAlly(eLoopPlayer))
-						iPenalty *= 2;
+					{
+						iPenalty *= /*200*/ GC.getOPINION_WEIGHT_BETRAYED_OUR_FRIEND_MULTIPLIER();
+						iPenalty /= 100;
+					}
 
 					iTraitorOpinion += iPenalty;
 				}
@@ -44193,7 +44629,7 @@ int CvDiplomacyAI::GetWeDenouncedFriendScore(PlayerTypes ePlayer)
 				// Someone important to us?
 				if (IsFriendOrAlly(eLoopPlayer))
 				{
-					iTraitorOpinion += (iWeight * 2);
+					iTraitorOpinion += (iWeight * /*200*/ GC.getOPINION_WEIGHT_BETRAYED_OUR_FRIEND_MULTIPLIER() / 100);
 				}
 				else
 				{
@@ -44241,7 +44677,7 @@ int CvDiplomacyAI::GetWeDeclaredWarOnFriendScore(PlayerTypes ePlayer)
 				// Someone important to us?
 				if (IsFriendOrAlly(eLoopPlayer))
 				{
-					iTraitorOpinion += (iWeight * 2);
+					iTraitorOpinion += (iWeight * /*200*/ GC.getOPINION_WEIGHT_BETRAYED_OUR_FRIEND_MULTIPLIER() / 100);
 				}
 				else
 				{
@@ -44266,112 +44702,21 @@ int CvDiplomacyAI::GetFriendDeclaredWarOnUsScore(PlayerTypes ePlayer)
 	return iTraitorOpinion;
 }
 
-int CvDiplomacyAI::GetMutualDenouncementScore(PlayerTypes ePlayer)
+int CvDiplomacyAI::GetResurrectorAttackedUsScore(PlayerTypes ePlayer)
 {
 	int iOpinionWeight = 0;
 
-	// We denounced each other!
-	if (IsDenouncedPlayer(ePlayer) && IsDenouncedByPlayer(ePlayer))
+	if (IsResurrectorAttackedUs(ePlayer))
 	{
-		iOpinionWeight += /*50*/ GC.getOPINION_WEIGHT_MUTUAL_DENOUNCEMENT();
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetDenouncedUsScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	// They denounced us!
-	if (IsDenouncedByPlayer(ePlayer) && !IsDenouncedPlayer(ePlayer))
-	{
-		iOpinionWeight += /*35*/ GC.getOPINION_WEIGHT_DENOUNCED_ME();
+		iOpinionWeight = /*200*/ GC.getOPINION_WEIGHT_RESURRECTOR_ATTACKED_US();
 	}
 
 	return iOpinionWeight;
 }
 
-int CvDiplomacyAI::GetDenouncedThemScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	// We denounced them!
-	if (IsDenouncedPlayer(ePlayer) && !IsDenouncedByPlayer(ePlayer))
-	{
-		iOpinionWeight += /*35*/ GC.getOPINION_WEIGHT_DENOUNCED_THEM();
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetDenouncedFriendScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNumFriendsDenounced = GetNumFriendsDenounced(ePlayer);
-
-	// They've denounced someone we have a DoF with
-	if (iNumFriendsDenounced > 0)
-	{
-		iOpinionWeight += /*18*/ GC.getOPINION_WEIGHT_DENOUNCED_FRIEND();
-
-		if (iNumFriendsDenounced > 1)
-		{
-			iOpinionWeight += (iNumFriendsDenounced - 1) * (GC.getOPINION_WEIGHT_DENOUNCED_FRIEND() / 3);
-		}
-	}
-
-	PlayerTypes eBestFriend = GetMostValuableFriend();
-	if (eBestFriend != NO_PLAYER && IsDoFAccepted(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eBestFriend))
-	{
-		iOpinionWeight += 18;
-	}
-
-	eBestFriend = GetMostValuableAlly();
-	if (eBestFriend != NO_PLAYER && IsHasDefensivePact(eBestFriend) && GET_PLAYER(eBestFriend).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eBestFriend))
-	{
-		iOpinionWeight += 18;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetDenouncedEnemyScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iNumEnemiesDenounced = GetNumEnemiesDenounced(ePlayer);
-
-	// They've denounced someone we've denounced
-	if (iNumEnemiesDenounced > 0)
-	{
-		iOpinionWeight += /*-18*/ GC.getOPINION_WEIGHT_DENOUNCED_ENEMY();
-
-		if (iNumEnemiesDenounced > 1)
-		{
-			iOpinionWeight += (iNumEnemiesDenounced - 1) * (GC.getOPINION_WEIGHT_DENOUNCED_ENEMY() / 3);
-		}
-	}
-
-	PlayerTypes eWorstCompetitor = GetBiggestCompetitor();
-	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eWorstCompetitor))
-	{
-		if (IsDenouncedPlayer(eWorstCompetitor))
-		{
-			iOpinionWeight += -18;
-		}
-	}
-
-	eWorstCompetitor = GetPrimeLeagueCompetitor();
-	if (eWorstCompetitor != NO_PLAYER && GET_PLAYER(eWorstCompetitor).isAlive() && GET_PLAYER(ePlayer).GetDiplomacyAI()->IsDenouncedPlayer(eWorstCompetitor))
-	{
-		if (IsDenouncedPlayer(eWorstCompetitor))
-		{
-			iOpinionWeight += -18;
-		}
-	}
-
-	return iOpinionWeight;
-}
+//////////////////////////////////////
+// RECKLESS EXPANDER / WONDER SPAMMER
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetRecklessExpanderScore(PlayerTypes ePlayer)
 {
@@ -44453,246 +44798,9 @@ int CvDiplomacyAI::GetWonderSpammerScore(PlayerTypes ePlayer)
 	return iOpinionWeight;
 }
 
-//todo
-int CvDiplomacyAI::GetRecentTradeScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	if (GetRecentTradeValue(ePlayer) > 0)
-	{
-		int iWeightChange = -1 * GetRecentTradeValue(ePlayer) / GC.getDEAL_VALUE_PER_OPINION_WEIGHT();
-		if(iWeightChange < /*-40*/ GC.getOPINION_WEIGHT_TRADE_MAX())
-		{
-			iWeightChange = GC.getOPINION_WEIGHT_TRADE_MAX();
-		}
-		iOpinionWeight +=  iWeightChange;
-	}
-
-	if (IsStrategicTradePartner(ePlayer))
-	{
-		iOpinionWeight *= /*150*/ GC.getOPINION_WEIGHT_STRATEGIC_TRADE_PARTNER_MULTIPLIER();
-		iOpinionWeight /= 100;
-	}
-
-	return iOpinionWeight;
-}
-
-//todo
-int CvDiplomacyAI::GetCommonFoeScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	if(GetCommonFoeValue(ePlayer) > 0)
-	{
-		int iWeightChange = -1 * GetCommonFoeValue(ePlayer) / GC.getCOMMON_FOE_VALUE_PER_OPINION_WEIGHT();
-		if(iWeightChange < /*-50*/ GC.getOPINION_WEIGHT_COMMON_FOE_MAX())
-		{
-			iWeightChange = GC.getOPINION_WEIGHT_COMMON_FOE_MAX();
-		}
-		iOpinionWeight +=  iWeightChange;
-	}	
-	return iOpinionWeight;
-}
-
-//todo
-int CvDiplomacyAI::GetRecentAssistScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	if(GetRecentAssistValue(ePlayer) != 0)
-	{
-		int iWeightChange = GetRecentAssistValue(ePlayer) / GC.getASSIST_VALUE_PER_OPINION_WEIGHT();
-		if (iWeightChange < /*-30*/ -GC.getOPINION_WEIGHT_ASSIST_MAX())
-		{
-			iWeightChange = -GC.getOPINION_WEIGHT_ASSIST_MAX();
-		}
-		else if (iWeightChange > /*30*/ GC.getOPINION_WEIGHT_ASSIST_MAX())
-		{
-			iWeightChange = GC.getOPINION_WEIGHT_ASSIST_MAX();
-		}
-		iOpinionWeight +=  iWeightChange;
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetNukedByScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	if(IsNukedBy(ePlayer))
-	{
-		iOpinionWeight += /*50*/ GC.getOPINION_WEIGHT_NUKED_MAX();
-	}
-
-	return iOpinionWeight;
-}
-
-//todo
-int CvDiplomacyAI::GetCitiesRazedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	if (GetNumTimesRazed(ePlayer) > 0)
-	{
-		iOpinionWeight += (min(GetNumTimesRazed(ePlayer), /*50*/ GC.getOPINION_WEIGHT_CIVILIAN_KILLER_MAX()) * /*1*/ GC.getOPINION_WEIGHT_PER_CIVILIAN_KILLER_VALUE());
-	}
-
-	return iOpinionWeight;
-}
-
-//todo
-int CvDiplomacyAI::GetCitiesRazedGlobalScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	if (GetMajorCivOpinion(ePlayer) <= MAJOR_CIV_OPINION_NEUTRAL && !IsDoFAccepted(ePlayer) && !IsHasDefensivePact(ePlayer))
-	{
-		for (int iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
-		{
-			PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
-
-			if (IsPlayerValid(eLoopPlayer, true) && eLoopPlayer != GetID() && GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->GetNumTimesRazed(ePlayer) >= 50)
-			{
-				MajorCivApproachTypes eApproach = GetMajorCivApproach(eLoopPlayer);
-				bool bDontCare = (WasEverBackstabbedBy(eLoopPlayer) || IsAtWar(eLoopPlayer) || IsDenouncedPlayer(eLoopPlayer) || IsDenouncedByPlayer(eLoopPlayer) || IsUntrustworthy(eLoopPlayer) || eApproach == MAJOR_CIV_APPROACH_AFRAID || eApproach <= MAJOR_CIV_APPROACH_DECEPTIVE || GetMajorCivOpinion(eLoopPlayer) <= MAJOR_CIV_OPINION_ENEMY);
-
-				if (!bDontCare)
-				{
-					iOpinionWeight = /*20*/ GC.getOPINION_WEIGHT_CIVILIAN_KILLER_WORLD();
-					break;
-				}
-			}
-		}
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetPolicyScore(PlayerTypes ePlayer)
-{
-	if (GC.getGame().isOption(GAMEOPTION_NO_POLICIES))
-		return 0;
-
-	int iOpinionWeight = 0;
-	int iNumPolicies = GetNumSamePolicies(ePlayer);
-	
-	if (iNumPolicies < 0)
-	{
-		iOpinionWeight = max(/*10*/ GC.getOPINION_WEIGHT_DIVERGENT_POLICIES(), iNumPolicies * /*5*/ -GC.getOPINION_WEIGHT_PER_DIVERGENT_POLICY());
-	}
-	else if (iNumPolicies > 0)
-	{
-		iOpinionWeight = min(/*-10*/ GC.getOPINION_WEIGHT_SIMILAR_POLICIES(), iNumPolicies * /*-5*/ GC.getOPINION_WEIGHT_PER_SIMILAR_POLICY());
-	}
-	
-	if (GetNeediness() >= /*8*/ GC.getPOLICY_SCORE_NEEDY_THRESHOLD())
-	{
-		if (iOpinionWeight > 0)
-		{
-			iOpinionWeight += /*5*/ GC.getPOLICY_SCORE_NEEDY_BONUS();
-		}
-		else if (iOpinionWeight < 0)
-		{
-			iOpinionWeight += /*-5*/ -GC.getPOLICY_SCORE_NEEDY_BONUS();
-		}
-	}
-
-	if (iOpinionWeight > 0 && IsIgnorePolicyDifferences(ePlayer))
-		return 0;
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetPtPSameCSScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	int iSamePtP = 0;
-
-	for (int iPlayerLoop = MAX_MAJOR_CIVS; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
-	{
-		PlayerTypes eMinorLoopPlayer = (PlayerTypes) iPlayerLoop;
-		if (eMinorLoopPlayer == NO_PLAYER)
-			continue;
-		
-		if (GET_PLAYER(eMinorLoopPlayer).isMinorCiv())
-		{
-			if (GET_PLAYER(eMinorLoopPlayer).GetMinorCivAI()->IsProtectedByMajor(ePlayer) && GET_PLAYER(eMinorLoopPlayer).GetMinorCivAI()->IsProtectedByMajor(GetID()))
-			{
-				iSamePtP++;
-			}
-		}
-	}
-	// Diplomatic civs apply a larger bonus for this if they're not being competed with.
-	if (IsDiplomat() && !IsMinorCivTroublemaker(ePlayer))
-	{
-		iSamePtP *= 2;
-	}
-	if (iSamePtP > 0)
-	{
-		iOpinionWeight += min(/*-12*/ GC.getOPINION_WEIGHT_PTP_SAME_MINOR_MIN(), (iSamePtP * /*-3*/ GC.getOPINION_WEIGHT_PTP_SAME_MINOR_EACH()));
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetCapitalCapturedByScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	
-	if (IsCapitalCapturedBy(ePlayer))
-	{
-		iOpinionWeight += /*160*/ GC.getOPINION_WEIGHT_CAPTURED_CAPITAL();
-	}
-
-	// Halve the weight if they willingly returned our capital.
-	if (IsPlayerReturnedCapital(ePlayer, true))
-	{
-		iOpinionWeight /= 2;
-	}
-
-	// If a capitulated vassal, halve the weight.
-	if (MOD_DIPLOMACY_CIV4_FEATURES && IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer))
-	{
-		iOpinionWeight *= 100;
-		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_CAPITULATION_DIVISOR());
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetHolyCityCapturedByScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-	
-	if (IsHolyCityCapturedBy(ePlayer))
-	{
-		iOpinionWeight += /*80*/ GC.getOPINION_WEIGHT_CAPTURED_HOLY_CITY();
-	}
-
-	// Halve the weight if they willingly returned our Holy City.
-	if (IsPlayerReturnedHolyCity(ePlayer, true))
-	{
-		iOpinionWeight /= 2;
-	}
-
-	// If a capitulated vassal, halve the weight.
-	if (MOD_DIPLOMACY_CIV4_FEATURES && IsVassal(ePlayer) && !IsVoluntaryVassalage(ePlayer))
-	{
-		iOpinionWeight *= 100;
-		iOpinionWeight /= max(1, /*200*/ GC.getOPINION_WEIGHT_CAPTURED_KEY_CITY_CAPITULATION_DIVISOR());
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetResurrectorAttackedUsScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	if (IsResurrectorAttackedUs(ePlayer))
-	{
-		iOpinionWeight = 200;
-	}
-
-	return iOpinionWeight;
-}
+//////////////////////////////////////
+// WORLD CONGRESS
+//////////////////////////////////////
 
 int CvDiplomacyAI::GetLeagueAlignmentScore(PlayerTypes ePlayer)
 {
@@ -44907,6 +45015,314 @@ int CvDiplomacyAI::GetSupportedMyHostingScore(PlayerTypes ePlayer)
 
 	return iOpinionWeight;
 }
+
+//////////////////////////////////////
+// VASSALAGE
+//////////////////////////////////////
+
+/// Opinion weight change based on being vassal
+int CvDiplomacyAI::GetVassalScore(PlayerTypes ePlayer) const
+{
+	if(!IsVassal(ePlayer)) return 0;
+	int iOpinionWeight = 0;
+
+	bool bVoluntaryVassal = GET_TEAM(GET_PLAYER(m_pPlayer->GetID()).getTeam()).IsVoluntaryVassal(GET_PLAYER(ePlayer).getTeam());
+	iOpinionWeight += bVoluntaryVassal ? GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_VOLUNTARY_VASSAL() : GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_VASSAL();
+
+	return iOpinionWeight;
+}
+
+/// Opinion weight change based on how well we've been treated by our master
+int CvDiplomacyAI::GetVassalTreatedScore(PlayerTypes ePlayer) const
+{
+	if(!IsVassal(ePlayer)) return 0;
+	int iOpinionWeight = 0;
+
+	iOpinionWeight += GetVassalDemandScore(ePlayer);
+	iOpinionWeight += GetVassalTaxScore(ePlayer);
+	iOpinionWeight += GetVassalProtectScore(ePlayer);
+	iOpinionWeight += GetVassalFailedProtectScore(ePlayer);
+	iOpinionWeight += GetVassalTradeRouteScore(ePlayer);
+	iOpinionWeight += GetVassalReligionScore(ePlayer);
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalDemandScore(PlayerTypes ePlayer) const
+{
+	if(!IsVassal(ePlayer)) return 0;
+	int iOpinionWeight = 0;
+
+	bool bVoluntaryVassal = GET_TEAM(GET_PLAYER(m_pPlayer->GetID()).getTeam()).IsVoluntaryVassal(GET_PLAYER(ePlayer).getTeam());
+	iOpinionWeight = GetNumTimesDemandedWhileVassal(ePlayer) * GC.getOPINION_WEIGHT_DEMANDED_WHILE_VASSAL();
+	
+	if(bVoluntaryVassal)
+	{
+		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
+		iOpinionWeight /= 100;
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalTaxScore(PlayerTypes ePlayer) const
+{
+	if(!IsVassal(ePlayer)) return 0;
+	int iOpinionWeight = 0;
+
+	int iGoldCollectedSinceVassalStarted = GetVassalGoldPerTurnCollectedSinceVassalStarted(ePlayer); 
+	if (iGoldCollectedSinceVassalStarted == 0)
+		return 0;
+	int iGoldTaxedSinceVassalStarted = GetVassalGoldPerTurnTaxedSinceVassalStarted(ePlayer);
+	int iPercentTaxed = iGoldTaxedSinceVassalStarted * 100 / iGoldCollectedSinceVassalStarted;
+
+	// Opinion weight from how much % we've taxed them
+	iOpinionWeight = ((int) pow((float)iPercentTaxed, GC.getOPINION_WEIGHT_VASSAL_TAX_EXPONENT())) / std::max(1, GC.getOPINION_WEIGHT_VASSAL_TAX_DIVISOR());
+	// Opinion weight from current tax %
+	iOpinionWeight += GET_TEAM(GET_PLAYER(ePlayer).getTeam()).GetVassalTax(m_pPlayer->GetID()) * GC.getOPINION_WEIGHT_VASSAL_CURRENT_TAX_MODIFIER() / 100;
+	
+	if (IsVoluntaryVassalage(ePlayer)) 
+	{
+		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
+		iOpinionWeight /= 100;
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalProtectScore(PlayerTypes ePlayer) const
+{
+	int iOpinionWeight = 0;
+
+	if (IsVassal(ePlayer))
+	{
+		int iWeightChange = -1 * GetVassalProtectValue(ePlayer) / std::max(1, GC.getVASSALAGE_PROTECT_VALUE_PER_OPINION_WEIGHT());
+		if (iWeightChange < /*-50*/ GC.getOPINION_WEIGHT_VASSALAGE_PROTECT_MAX())
+		{
+			iWeightChange = GC.getOPINION_WEIGHT_VASSALAGE_PROTECT_MAX();
+		}
+		iOpinionWeight +=  iWeightChange;
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalFailedProtectScore(PlayerTypes ePlayer) const
+{
+	int iOpinionWeight = 0;
+
+	if (IsVassal(ePlayer))
+	{
+		int iWeightChange = GetVassalFailedProtectValue(ePlayer) / std::max(1, GC.getVASSALAGE_FAILED_PROTECT_VALUE_PER_OPINION_WEIGHT());
+		if (iWeightChange > /*50*/ GC.getOPINION_WEIGHT_VASSALAGE_FAILED_PROTECT_MAX())
+		{
+			iWeightChange = GC.getOPINION_WEIGHT_VASSALAGE_FAILED_PROTECT_MAX();
+		}
+		iOpinionWeight += iWeightChange;
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalTradeRouteScore(PlayerTypes ePlayer) const
+{
+	if(!IsVassal(ePlayer)) return 0;
+	int iOpinionWeight = 0;
+	
+	bool bHaveTradeRouteWithUs = GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(ePlayer, m_pPlayer->GetID());
+	if (bHaveTradeRouteWithUs)
+	{
+		iOpinionWeight += -15;
+	}
+	
+	if (IsVoluntaryVassalage(ePlayer))
+	{
+		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
+		iOpinionWeight /= 100;
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetVassalReligionScore(PlayerTypes ePlayer) const
+{
+	if (GC.getGame().isOption(GAMEOPTION_NO_RELIGION)) return 0;
+	if (!IsVassal(ePlayer)) return 0;
+
+	int iOpinionWeight = 0;
+
+	ReligionTypes eVassalStateReligion = GetPlayer()->GetReligions()->GetCurrentReligion(false);
+	ReligionTypes eVassalMajorityReligion = GetPlayer()->GetReligions()->GetReligionInMostCities();
+	ReligionTypes eMasterStateReligion = GET_PLAYER(ePlayer).GetReligions()->GetCurrentReligion(false);
+	ReligionTypes eMasterMajorityReligion = GET_PLAYER(ePlayer).GetReligions()->GetReligionInMostCities();
+
+	// No vassal religion - don't care
+	if (eVassalStateReligion == NO_RELIGION && eVassalMajorityReligion == NO_RELIGION)
+		return 0;
+
+	// Vassal did not found or conquer
+	if (eVassalStateReligion == NO_RELIGION)
+	{
+		// Master founded, and we have their religion
+		if (eMasterStateReligion != NO_RELIGION && eMasterStateReligion == eVassalMajorityReligion && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, ePlayer))
+		{
+			iOpinionWeight += -20;
+		}
+		// Same majority religions
+		else if (eMasterMajorityReligion != NO_RELIGION && eMasterMajorityReligion == eVassalMajorityReligion)
+		{
+			iOpinionWeight += -10;
+		}
+	}
+	// Vassal did found or conquer
+	else
+	{
+		// Master also founded or conquered
+		if (eMasterStateReligion != NO_RELIGION && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, ePlayer))
+		{
+			// ... and it's our majority religion
+			if (eMasterStateReligion == eVassalMajorityReligion)
+			{
+				iOpinionWeight += 25;
+			}
+			// ... and they've converted some of our cities
+			else if (GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, GetID()))
+			{
+				iOpinionWeight += 10;
+			}
+		}
+		// Master did not found or conquer, but does have a majority religion - ours
+		else if (eMasterMajorityReligion != NO_RELIGION && eMasterMajorityReligion == eVassalStateReligion)
+		{
+			iOpinionWeight += -40;
+		}
+	}
+	
+	if (IsVoluntaryVassalage(ePlayer))
+	{
+		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
+		iOpinionWeight /= 100;
+	}
+
+	// No opinion bonuses if the Holy City was captured and we don't have it back yet
+	if (iOpinionWeight < 0 && GetPlayer()->IsHasLostHolyCity() && IsPlayerCapturedHolyCity(ePlayer))
+		return 0;
+
+	// No opinion penalties if ignoring religious differences
+	if (iOpinionWeight > 0 && GetPlayer()->GetDiplomacyAI()->IsIgnoreReligionDifferences(ePlayer))
+		return 0;
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetMasterScore(PlayerTypes ePlayer) const
+{
+	int iOpinionWeight = 0;
+
+	if (IsMaster(ePlayer))
+	{
+		iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_MASTER();
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetTooManyVassalsScore(PlayerTypes ePlayer) const
+{
+	int iOpinionWeight = 0;
+	int iNumVassals = 0;
+
+	// Vassals, friends and teammates aren't too concerned
+	if (IsVassal(ePlayer) || IsDoFAccepted(ePlayer) || IsTeammate(ePlayer))
+	{
+		return 0;
+	}
+
+	// Each vassal contributes +10 to score (each player on a team counts as 1 vassal)
+	for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
+	{
+		// Only civs we have met
+		if (GET_TEAM(m_pPlayer->getTeam()).isHasMet(GET_PLAYER((PlayerTypes)iI).getTeam()))
+		{
+			if (GET_TEAM(GET_PLAYER((PlayerTypes)iI).getTeam()).IsVassal(GET_PLAYER(ePlayer).getTeam()))
+			{
+				iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_VASSALAGE_TOO_MANY_VASSALS();
+				iNumVassals++;
+			}
+		}
+	}
+
+	// First vassal worth nothing
+	if (iNumVassals == 1)
+		iOpinionWeight = 0;
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetSameMasterScore(PlayerTypes ePlayer) const
+{
+	// Redundant for teammates
+	if (IsTeammate(ePlayer))
+		return 0;
+	
+	int iOpinionWeight = 0;
+	
+	if (GetPlayer()->IsVassalOfSomeone() && GET_PLAYER(ePlayer).IsVassalOfSomeone())
+	{
+		if (GET_TEAM(GetTeam()).GetMaster() == GET_TEAM(GET_PLAYER(ePlayer).getTeam()).GetMaster())
+		{
+			iOpinionWeight += -30;
+		}
+	}
+	
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetHappyAboutVassalagePeacefullyRevokedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	if (IsHappyAboutPlayerVassalagePeacefullyRevoked(ePlayer))
+	{
+		iOpinionWeight = /*-40*/ GC.getOPINION_WEIGHT_VASSALAGE_THEY_PEACEFULLY_REVOKED();
+		int iDuration = AdjustModifierDuration(true, /*100*/ GC.getOPINION_WEIGHT_VASSALAGE_PEACEFULLY_REVOKED_NUM_TURNS_UNTIL_FORGOTTEN(), GetLoyalty());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetVassalagePeacefullyRevokedTurn(ePlayer), MODIFIER_TYPE_NORMAL);
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetAngryAboutVassalageForcefullyRevokedScore(PlayerTypes ePlayer)
+{
+	int iOpinionWeight = 0;
+
+	if (IsAngryAboutPlayerVassalageForcefullyRevoked(ePlayer))
+	{
+		iOpinionWeight += /*50*/ GC.getOPINION_WEIGHT_VASSALAGE_THEY_FORCIBLY_REVOKED();
+		int iDuration = AdjustModifierDuration(false, /*100*/ GC.getOPINION_WEIGHT_VASSALAGE_FORCIBLY_REVOKED_NUM_TURNS_UNTIL_FORGIVEN(), GetBoldness());
+		return AdjustModifierValue(iOpinionWeight, iDuration, GetVassalageForcefullyRevokedTurn(ePlayer), MODIFIER_TYPE_NORMAL);
+	}
+
+	return iOpinionWeight;
+}
+
+int CvDiplomacyAI::GetBrokenVassalAgreementScore(PlayerTypes ePlayer) const
+{
+	int iOpinionWeight = 0;
+
+	// Declared war on us while we were his vassal
+	// No scaling for backstabbing penalties!
+	if (IsPlayerBrokenVassalAgreement(ePlayer))
+	{
+		iOpinionWeight += /*40*/ GC.getOPINION_WEIGHT_VASSALAGE_BROKEN_VASSAL_AGREEMENT_OPINION_WEIGHT();
+	}
+
+	return iOpinionWeight;
+}
+
+//////////////////////////////////////
+// SCENARIO-SPECIFIC
+//////////////////////////////////////
 
 #if defined(MOD_EVENTS_DIPLO_MODIFIERS)
 int CvDiplomacyAI::GetDiploModifiers(PlayerTypes eToPlayer, std::vector<Opinion>& aOpinions)
@@ -52763,18 +53179,6 @@ int CvDiplomacyAI::GetMasterLiberatedMeFromVassalageScore(PlayerTypes ePlayer) c
 	return iOpinionWeight;
 }
 
-/// Opinion weight change based on being vassal
-int CvDiplomacyAI::GetVassalScore(PlayerTypes ePlayer) const
-{
-	if(!IsVassal(ePlayer)) return 0;
-	int iOpinionWeight = 0;
-
-	bool bVoluntaryVassal = GET_TEAM(GET_PLAYER(m_pPlayer->GetID()).getTeam()).IsVoluntaryVassal(GET_PLAYER(ePlayer).getTeam());
-	iOpinionWeight += bVoluntaryVassal ? GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_VOLUNTARY_VASSAL() : GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_VASSAL();
-
-	return iOpinionWeight;
-}
-
 /// Get how we think ePlayer has treated us as our master
 VassalTreatmentTypes CvDiplomacyAI::GetVassalTreatmentLevel(PlayerTypes ePlayer) const
 {
@@ -52846,252 +53250,6 @@ CvString CvDiplomacyAI::GetVassalTreatmentToolTip(PlayerTypes ePlayer) const
 	return szRtnValue;
 }
 
-/// Opinion weight change based on how well we've been treated by our master
-int CvDiplomacyAI::GetVassalTreatedScore(PlayerTypes ePlayer) const
-{
-	if(!IsVassal(ePlayer)) return 0;
-	int iOpinionWeight = 0;
-
-	iOpinionWeight += GetVassalDemandScore(ePlayer);
-	iOpinionWeight += GetVassalTaxScore(ePlayer);
-	iOpinionWeight += GetVassalProtectScore(ePlayer);
-	iOpinionWeight += GetVassalFailedProtectScore(ePlayer);
-	iOpinionWeight += GetVassalTradeRouteScore(ePlayer);
-	iOpinionWeight += GetVassalReligionScore(ePlayer);
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalDemandScore(PlayerTypes ePlayer) const
-{
-	if(!IsVassal(ePlayer)) return 0;
-	int iOpinionWeight = 0;
-
-	bool bVoluntaryVassal = GET_TEAM(GET_PLAYER(m_pPlayer->GetID()).getTeam()).IsVoluntaryVassal(GET_PLAYER(ePlayer).getTeam());
-	iOpinionWeight = GetNumTimesDemandedWhileVassal(ePlayer) * GC.getOPINION_WEIGHT_DEMANDED_WHILE_VASSAL();
-	
-	if(bVoluntaryVassal)
-	{
-		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
-		iOpinionWeight /= 100;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalTaxScore(PlayerTypes ePlayer) const
-{
-	if(!IsVassal(ePlayer)) return 0;
-	int iOpinionWeight = 0;
-
-	int iGoldCollectedSinceVassalStarted = GetVassalGoldPerTurnCollectedSinceVassalStarted(ePlayer); 
-	if (iGoldCollectedSinceVassalStarted == 0)
-		return 0;
-	int iGoldTaxedSinceVassalStarted = GetVassalGoldPerTurnTaxedSinceVassalStarted(ePlayer);
-	int iPercentTaxed = iGoldTaxedSinceVassalStarted * 100 / iGoldCollectedSinceVassalStarted;
-
-	// Opinion weight from how much % we've taxed them
-	iOpinionWeight = ((int) pow((float)iPercentTaxed, GC.getOPINION_WEIGHT_VASSAL_TAX_EXPONENT())) / std::max(1, GC.getOPINION_WEIGHT_VASSAL_TAX_DIVISOR());
-	// Opinion weight from current tax %
-	iOpinionWeight += GET_TEAM(GET_PLAYER(ePlayer).getTeam()).GetVassalTax(m_pPlayer->GetID()) * GC.getOPINION_WEIGHT_VASSAL_CURRENT_TAX_MODIFIER() / 100;
-	
-	if (IsVoluntaryVassalage(ePlayer)) 
-	{
-		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
-		iOpinionWeight /= 100;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalTradeRouteScore(PlayerTypes ePlayer) const
-{
-	if(!IsVassal(ePlayer)) return 0;
-	int iOpinionWeight = 0;
-	
-	bool bHaveTradeRouteWithUs = GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(ePlayer, m_pPlayer->GetID());
-	if (bHaveTradeRouteWithUs)
-	{
-		iOpinionWeight += -15;
-	}
-	
-	if (IsVoluntaryVassalage(ePlayer))
-	{
-		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
-		iOpinionWeight /= 100;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalReligionScore(PlayerTypes ePlayer) const
-{
-	if (GC.getGame().isOption(GAMEOPTION_NO_RELIGION)) return 0;
-	if (!IsVassal(ePlayer)) return 0;
-
-	int iOpinionWeight = 0;
-
-	ReligionTypes eVassalStateReligion = GetPlayer()->GetReligions()->GetCurrentReligion(false);
-	ReligionTypes eVassalMajorityReligion = GetPlayer()->GetReligions()->GetReligionInMostCities();
-	ReligionTypes eMasterStateReligion = GET_PLAYER(ePlayer).GetReligions()->GetCurrentReligion(false);
-	ReligionTypes eMasterMajorityReligion = GET_PLAYER(ePlayer).GetReligions()->GetReligionInMostCities();
-
-	// No vassal religion - don't care
-	if (eVassalStateReligion == NO_RELIGION && eVassalMajorityReligion == NO_RELIGION)
-		return 0;
-
-	// Vassal did not found or conquer
-	if (eVassalStateReligion == NO_RELIGION)
-	{
-		// Master founded, and we have their religion
-		if (eMasterStateReligion != NO_RELIGION && eMasterStateReligion == eVassalMajorityReligion && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, ePlayer))
-		{
-			iOpinionWeight += -20;
-		}
-		// Same majority religions
-		else if (eMasterMajorityReligion != NO_RELIGION && eMasterMajorityReligion == eVassalMajorityReligion)
-		{
-			iOpinionWeight += -10;
-		}
-	}
-	// Vassal did found or conquer
-	else
-	{
-		// Master also founded or conquered
-		if (eMasterStateReligion != NO_RELIGION && GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, ePlayer))
-		{
-			// ... and it's our majority religion
-			if (eMasterStateReligion == eVassalMajorityReligion)
-			{
-				iOpinionWeight += 25;
-			}
-			// ... and they've converted some of our cities
-			else if (GC.getGame().GetGameReligions()->HasAnyDomesticCityFollowing(eMasterStateReligion, GetID()))
-			{
-				iOpinionWeight += 10;
-			}
-		}
-		// Master did not found or conquer, but does have a majority religion - ours
-		else if (eMasterMajorityReligion != NO_RELIGION && eMasterMajorityReligion == eVassalStateReligion)
-		{
-			iOpinionWeight += -40;
-		}
-	}
-	
-	if (IsVoluntaryVassalage(ePlayer))
-	{
-		iOpinionWeight *= GC.getOPINION_WEIGHT_VASSALAGE_VOLUNTARY_VASSAL_MOD();
-		iOpinionWeight /= 100;
-	}
-
-	// No opinion bonuses if the Holy City was captured and we don't have it back yet
-	if (iOpinionWeight < 0 && GetPlayer()->IsHasLostHolyCity() && IsPlayerCapturedHolyCity(ePlayer))
-		return 0;
-
-	// No opinion penalties if ignoring religious differences
-	if (iOpinionWeight > 0 && GetPlayer()->GetDiplomacyAI()->IsIgnoreReligionDifferences(ePlayer))
-		return 0;
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetMasterScore(PlayerTypes ePlayer) const
-{
-	int iOpinionWeight = 0;
-
-	if (IsMaster(ePlayer))
-	{
-		iOpinionWeight += /*-20*/ GC.getOPINION_WEIGHT_VASSALAGE_WE_ARE_MASTER();
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetTooManyVassalsScore(PlayerTypes ePlayer) const
-{
-	int iOpinionWeight = 0;
-	int iNumVassals = 0;
-
-	// Vassals, friends and teammates aren't too concerned
-	if (IsVassal(ePlayer) || IsDoFAccepted(ePlayer) || IsTeammate(ePlayer))
-	{
-		return 0;
-	}
-
-	// Each vassal contributes +10 to score (each player on a team counts as 1 vassal)
-	for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
-	{
-		// Only civs we have met
-		if (GET_TEAM(m_pPlayer->getTeam()).isHasMet(GET_PLAYER((PlayerTypes)iI).getTeam()))
-		{
-			if (GET_TEAM(GET_PLAYER((PlayerTypes)iI).getTeam()).IsVassal(GET_PLAYER(ePlayer).getTeam()))
-			{
-				iOpinionWeight += /*10*/ GC.getOPINION_WEIGHT_VASSALAGE_TOO_MANY_VASSALS();
-				iNumVassals++;
-			}
-		}
-	}
-
-	// First vassal worth nothing
-	if (iNumVassals == 1)
-		iOpinionWeight = 0;
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetSameMasterScore(PlayerTypes ePlayer) const
-{
-	// Redundant for teammates
-	if (IsTeammate(ePlayer))
-		return 0;
-	
-	int iOpinionWeight = 0;
-	
-	if (GetPlayer()->IsVassalOfSomeone() && GET_PLAYER(ePlayer).IsVassalOfSomeone())
-	{
-		if (GET_TEAM(GetTeam()).GetMaster() == GET_TEAM(GET_PLAYER(ePlayer).getTeam()).GetMaster())
-		{
-			iOpinionWeight += -30;
-		}
-	}
-	
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalProtectScore(PlayerTypes ePlayer) const
-{
-	int iOpinionWeight = 0;
-
-	if (IsVassal(ePlayer))
-	{
-		int iWeightChange = -1 * GetVassalProtectValue(ePlayer) / std::max(1, GC.getVASSALAGE_PROTECT_VALUE_PER_OPINION_WEIGHT());
-		if (iWeightChange < /*-50*/ GC.getOPINION_WEIGHT_VASSALAGE_PROTECT_MAX())
-		{
-			iWeightChange = GC.getOPINION_WEIGHT_VASSALAGE_PROTECT_MAX();
-		}
-		iOpinionWeight +=  iWeightChange;
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetVassalFailedProtectScore(PlayerTypes ePlayer) const
-{
-	int iOpinionWeight = 0;
-
-	if (IsVassal(ePlayer))
-	{
-		int iWeightChange = GetVassalFailedProtectValue(ePlayer) / std::max(1, GC.getVASSALAGE_FAILED_PROTECT_VALUE_PER_OPINION_WEIGHT());
-		if (iWeightChange > /*50*/ GC.getOPINION_WEIGHT_VASSALAGE_FAILED_PROTECT_MAX())
-		{
-			iWeightChange = GC.getOPINION_WEIGHT_VASSALAGE_FAILED_PROTECT_MAX();
-		}
-		iOpinionWeight += iWeightChange;
-	}
-
-	return iOpinionWeight;
-}
-
 /// Returns if we've peacefully revoked vassalage (and they agreed)
 bool CvDiplomacyAI::IsHappyAboutPlayerVassalagePeacefullyRevoked(PlayerTypes ePlayer)
 {
@@ -53111,34 +53269,6 @@ bool CvDiplomacyAI::IsHappyAboutPlayerVassalagePeacefullyRevoked(PlayerTypes ePl
 	return false;
 }
 
-int CvDiplomacyAI::GetHappyAboutVassalagePeacefullyRevokedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	if (IsHappyAboutPlayerVassalagePeacefullyRevoked(ePlayer))
-	{
-		iOpinionWeight = /*-40*/ GC.getOPINION_WEIGHT_VASSALAGE_THEY_PEACEFULLY_REVOKED();
-		int iDuration = AdjustModifierDuration(true, /*100*/ GC.getOPINION_WEIGHT_VASSALAGE_PEACEFULLY_REVOKED_NUM_TURNS_UNTIL_FORGOTTEN(), GetLoyalty());
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetVassalagePeacefullyRevokedTurn(ePlayer), MODIFIER_TYPE_NORMAL);
-	}
-
-	return iOpinionWeight;
-}
-
-int CvDiplomacyAI::GetAngryAboutVassalageForcefullyRevokedScore(PlayerTypes ePlayer)
-{
-	int iOpinionWeight = 0;
-
-	if (IsAngryAboutPlayerVassalageForcefullyRevoked(ePlayer))
-	{
-		iOpinionWeight += /*50*/ GC.getOPINION_WEIGHT_VASSALAGE_THEY_FORCIBLY_REVOKED();
-		int iDuration = AdjustModifierDuration(false, /*100*/ GC.getOPINION_WEIGHT_VASSALAGE_FORCIBLY_REVOKED_NUM_TURNS_UNTIL_FORGIVEN(), GetBoldness());
-		return AdjustModifierValue(iOpinionWeight, iDuration, GetVassalageForcefullyRevokedTurn(ePlayer), MODIFIER_TYPE_NORMAL);
-	}
-
-	return iOpinionWeight;
-}
-
 /// Returns if we've forcefully revoked vassalage
 bool CvDiplomacyAI::IsAngryAboutPlayerVassalageForcefullyRevoked(PlayerTypes ePlayer)
 {
@@ -53156,20 +53286,6 @@ bool CvDiplomacyAI::IsAngryAboutPlayerVassalageForcefullyRevoked(PlayerTypes ePl
 	}
 
 	return false;
-}
-
-int CvDiplomacyAI::GetBrokenVassalAgreementScore(PlayerTypes ePlayer) const
-{
-	int iOpinionWeight = 0;
-
-	// Declared war on us while we were his vassal
-	// No scaling for backstabbing penalties!
-	if (IsPlayerBrokenVassalAgreement(ePlayer))
-	{
-		iOpinionWeight += /*40*/ GC.getOPINION_WEIGHT_VASSALAGE_BROKEN_VASSAL_AGREEMENT_OPINION_WEIGHT();
-	}
-
-	return iOpinionWeight;
 }
 
 /// eMasterTeam has changed our taxes
@@ -54206,7 +54322,7 @@ MoveTroopsResponseTypes CvDiplomacyAI::GetMoveTroopsRequestResponse(PlayerTypes 
 	MajorCivApproachTypes eTrueApproach = GetMajorCivApproach(ePlayer);
 	MajorCivOpinionTypes eOpinion = GetMajorCivOpinion(ePlayer);
 
-	vector<int> viMoveTroopsWeights;
+	FStaticVector< int, 128, true, c_eCiv5GameplayDLL > viMoveTroopsWeights;
 
 	// Push back values
 	for (int i=0; i < NUM_MOVE_TROOPS_RESPONSES; i++)

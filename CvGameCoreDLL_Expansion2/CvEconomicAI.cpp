@@ -1984,7 +1984,7 @@ void CvEconomicAI::DoPlotPurchases()
 		return;
 	}
 
-	// No plot buying when at war and losing
+	// No plot buying when at war
 	MilitaryAIStrategyTypes eStrategyAtWar = (MilitaryAIStrategyTypes) GC.getInfoTypeForString("MILITARYAISTRATEGY_AT_WAR");
 	if (m_pPlayer->GetMilitaryAI()->IsUsingStrategy(eStrategyAtWar) && m_pPlayer->GetDiplomacyAI()->GetStateAllWars() == STATE_ALL_WARS_LOSING)
 	{
@@ -2319,7 +2319,7 @@ void CvEconomicAI::DoAntiquitySites()
 						iNumHiddenSitesOwn++;
 					}
 				}
-				else if (pPlot->getOwner() == NO_PLAYER)
+				else if(pPlot->getOwner() == NO_PLAYER)
 				{
 					iNumSitesNeutral++;
 				}
@@ -2356,7 +2356,6 @@ void CvEconomicAI::DisbandMiscUnits()
 		}
 	}
 }
-
 void CvEconomicAI::DisbandUselessSettlers()
 {
 	//If we want settlers, don't disband.
@@ -2505,7 +2504,6 @@ void CvEconomicAI::DisbandExtraWorkboats()
 		LogScrapUnit(pUnit, iNumWorkers, iNumCities, iNumUnimprovedPlots, iNumValidPlots);
 	}
 }
-
 CvUnit* CvEconomicAI::FindSeaWorkerToScrap()
 {
 	CvUnit* pLoopUnit = NULL;
@@ -2680,19 +2678,19 @@ void CvEconomicAI::DisbandExtraWorkers()
 	int iLoop;
 	for (CvCity* pCity = m_pPlayer->firstCity(&iLoop); pCity != NULL; pCity = m_pPlayer->nextCity(&iLoop))
 	{
-		if (pCity == pCapital)
+		if(pCity == pCapital)
 		{
 			continue;
 		}
 
-		if (pCapital->getArea() == pCity->getArea() && !pCity->IsRouteToCapitalConnected())
+		if(pCapital->getArea() == pCity->getArea() && !pCity->IsRouteToCapitalConnected())
 		{
 			iMinWorkers += 1;
 		}
 	}
 
 
-	if (iNumWorkers <= iMinWorkers)
+	if(iNumWorkers <= iMinWorkers)
 	{
 		return;
 	}
@@ -2730,7 +2728,7 @@ void CvEconomicAI::DisbandLongObsoleteUnits()
 
 			// The unit must have an upgrade option, if not, then we don't care about this (includes workers, settlers, explorers)
 			UnitTypes eUpgradeUnitType = pUnit->GetUpgradeUnitType();
-
+				
 			//Fixed for settlers for advanced start.
 			if(eUpgradeUnitType != NO_UNIT && !pUnit->isFound())
 			{
@@ -3241,7 +3239,6 @@ bool EconomicAIHelpers::IsTestStrategy_EnoughReconSea(CvPlayer* pPlayer)
 		return true;
 	}
 #endif
-
 	return (pPlayer->GetEconomicAI()->GetNavalReconState() == RECON_STATE_ENOUGH);
 }
 
@@ -4299,7 +4296,7 @@ bool EconomicAIHelpers::IsTestStrategy_EnoughArchaeologists(CvPlayer* pPlayer)
 
 	int iNumArchaeologists = pPlayer->GetNumUnitsWithUnitAI(UNITAI_ARCHAEOLOGIST, true);
 	PolicyTypes eExpFinisher = (PolicyTypes) GC.getInfoTypeForString("POLICY_EXPLORATION_FINISHER", true /*bHideAssert*/);
-
+	
 	if (eExpFinisher != NO_POLICY)
 	{
 		if (pPlayer->GetPlayerPolicies()->HasPolicy(eExpFinisher))
@@ -4307,7 +4304,7 @@ bool EconomicAIHelpers::IsTestStrategy_EnoughArchaeologists(CvPlayer* pPlayer)
 			iNumSites += GC.getGame().GetNumHiddenArchaeologySites();
 		}
 	}
-
+		
 	if ((double)iNumSites * iMaxRatio + 1 < iNumArchaeologists)
 	{
 		return true;
