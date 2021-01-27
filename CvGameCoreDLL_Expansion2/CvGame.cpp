@@ -9743,7 +9743,7 @@ void CvGame::updateMoves()
 	// Processing of the AI 'first' only occurs when the AI are activated first
 	// in doTurn, when MPSIMULTANEOUS_TURNS is set.  If the turns are sequential,
 	// only one human or AI is active at one time and this will process them in order.
-	FStaticVector<PlayerTypes, MAX_PLAYERS, true, c_eCiv5GameplayDLL, 0> playersToProcess;
+	vector<PlayerTypes> playersToProcess;
 
 	for(iI = 0; iI < MAX_PLAYERS; iI++)
 	{
@@ -9815,7 +9815,7 @@ void CvGame::updateMoves()
 		}
 	}
 
-	FStaticVector<PlayerTypes, MAX_PLAYERS, true, c_eCiv5GameplayDLL, 0>::const_iterator i;
+	vector<PlayerTypes>::const_iterator i;
 
 	for(i = playersToProcess.begin(); i != playersToProcess.end(); ++i)
 	{

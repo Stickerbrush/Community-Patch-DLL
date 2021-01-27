@@ -3833,8 +3833,8 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 	bool bCapital = pOldCity->isCapital();
 
 	// find the plot
-	FStaticVector<int, 121, true, c_eCiv5GameplayDLL, 0> aiPurchasedPlotX;
-	FStaticVector<int, 121, true, c_eCiv5GameplayDLL, 0> aiPurchasedPlotY;
+	vector<int> aiPurchasedPlotX;
+	vector<int> aiPurchasedPlotY;
 	const int iMaxRange = /*5*/ GC.getMAXIMUM_ACQUIRE_PLOT_DISTANCE();
 
 	for(int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
@@ -19536,7 +19536,7 @@ void CvPlayer::DoYieldsFromKill(CvUnit* pAttackingUnit, CvUnit* pDefendingUnit, 
 void CvPlayer::DoTechFromCityConquer(CvCity* pConqueredCity)
 {
 	PlayerTypes eOpponent = pConqueredCity->getOwner();
-	FStaticVector<TechTypes, 128, true, c_eCiv5GameplayDLL> vePossibleTechs;
+	vector<TechTypes> vePossibleTechs;
 	int iCheapestTechCost = MAX_INT;
 	for (int i = 0; i < GC.getNumTechInfos(); i++)
 	{
@@ -31392,7 +31392,7 @@ void CvPlayer::DoDiversity(DomainTypes eDomain)
 	int iLowest = MAX_INT;
 	int iUnitAI = -1;
 
-	FStaticVector<int, NUM_UNITAI_TYPES, true, c_eCiv5GameplayDLL> veAITypeTotals;
+	vector<int> veAITypeTotals;
 	for (int i = 0; i < NUM_UNITAI_TYPES; i++)
 	{
 		veAITypeTotals.push_back(-1);
@@ -38841,7 +38841,7 @@ void CvPlayer::changeSiphonLuxuryCount(PlayerTypes eFromPlayer, int iChange)
 /// we are now allowed to siphon.  Change our resource count if there is a discrepancy.
 void CvPlayer::UpdateResourcesSiphoned()
 {
-	FStaticVector<int, 64, true, c_eCiv5GameplayDLL> vDeltas;
+	vector<int> vDeltas;
 	
 	// Subtract all currently siphoned resources
 	for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)

@@ -37892,7 +37892,7 @@ const char* CvDiplomacyAI::GetGreetHumanMessage(LeaderheadAnimationTypes& eAnima
 
 	// Most Greetings are added to a vector to be picked from randomly
 	// However, some are returned immediately, as they "fit" well enough that we DEFINITELY want to use that specific greeting
-	FStaticVector<DiploMessageTypes, NUM_DIPLO_MESSAGE_TYPES, true, c_eCiv5GameplayDLL, 0> veValidGreetings;
+	vector<DiploMessageTypes> veValidGreetings;
 
 	// Determine if the AI is being hostile to the player
 	bool bHostile = IsActHostileTowardsHuman(eHuman);
@@ -38572,7 +38572,7 @@ const char* CvDiplomacyAI::GetInsultHumanMessage()
 
 	StrengthTypes eMilitaryStrengthComparedToUs = GetPlayerMilitaryStrengthComparedToUs(ePlayer);
 
-	FStaticVector<DiploMessageTypes, NUM_DIPLO_MESSAGE_TYPES, true, c_eCiv5GameplayDLL, 0> veValidInsults;
+	vector<DiploMessageTypes> veValidInsults;
 
 	// They're weak militarily
 	if(eMilitaryStrengthComparedToUs <= STRENGTH_WEAK)
@@ -54206,7 +54206,7 @@ MoveTroopsResponseTypes CvDiplomacyAI::GetMoveTroopsRequestResponse(PlayerTypes 
 	MajorCivApproachTypes eTrueApproach = GetMajorCivApproach(ePlayer);
 	MajorCivOpinionTypes eOpinion = GetMajorCivOpinion(ePlayer);
 
-	FStaticVector< int, 128, true, c_eCiv5GameplayDLL > viMoveTroopsWeights;
+	vector<int> viMoveTroopsWeights;
 
 	// Push back values
 	for (int i=0; i < NUM_MOVE_TROOPS_RESPONSES; i++)
