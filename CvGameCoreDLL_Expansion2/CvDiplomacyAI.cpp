@@ -11334,7 +11334,7 @@ bool CvDiplomacyAI::IsWantsPeaceWithPlayer(PlayerTypes ePlayer) const
 			otherPlayerName = GET_PLAYER(ePlayer).getCivilizationShortDescription();
 			strBaseString += playerName + " VS. " + otherPlayerName;
 
-			strOutBuf.Format("PEACE BLOCKED! ");
+			strOutBuf.Format(" PEACE BLOCKED! ");
 			strOutBuf += strPeaceBlockReason;
 
 			strBaseString += strOutBuf;
