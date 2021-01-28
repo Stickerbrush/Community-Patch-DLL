@@ -34720,8 +34720,7 @@ bool CvCity::isInDangerOfFalling() const
 
 bool CvCity::isUnderSiege() const
 {
-	//or maybe count enemy units?
-	return m_iDamageTakenLastTurn > 0;
+	return m_iDamageTakenLastTurn > 0 || plot()->GetNumEnemyUnitsAdjacent(getTeam(),NO_DOMAIN)>0;
 }
 #endif
 

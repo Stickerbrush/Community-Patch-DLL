@@ -7188,8 +7188,8 @@ void CvUnit::SetTurnProcessed(bool bValue)
 void CvUnit::setTacticalMove(AITacticalMove eMove)
 {
 #ifdef VPDEBUG
-	//sanity check
-	if (m_eTacticalMove != AI_TACTICAL_MOVE_NONE && eMove != AI_TACTICAL_MOVE_NONE && m_eTacticalMove != eMove)
+	//sanity check (ignore units in armies ... especially escorts)
+	if (m_eTacticalMove != AI_TACTICAL_MOVE_NONE && eMove != AI_TACTICAL_MOVE_NONE && m_eTacticalMove != eMove && getArmyID()==-1)
 	{
 		CvString msg = CvString::format("Warning, overwriting tactical move %s with %s\n", tacticalMoveNames[m_eTacticalMove], tacticalMoveNames[eMove] );
 		OutputDebugString(msg.c_str());
@@ -12711,8 +12711,8 @@ void CvUnit::PerformCultureBomb(int iRadius)
 	}
 
 	// Keep track of got hit by this so we can figure the diplo ramifications later
-	FStaticVector<bool, MAX_CIV_PLAYERS, true, c_eCiv5GameplayDLL, 0> vePlayersBombed;
-	FStaticVector<bool, MAX_CIV_PLAYERS, true, c_eCiv5GameplayDLL, 0> vePlayersStoleHighValueTileFrom;
+	vector<bool> vePlayersBombed;
+	vector<bool> vePlayersStoleHighValueTileFrom;
 	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
 		vePlayersBombed.push_back(false);
@@ -19377,8 +19377,8 @@ void CvUnit::setXY(int iX, int iY, bool bGroup, bool bUpdate, bool bShow, bool b
 	CvCity* pNewCity = 0;
 	CvUnit* pTransportUnit = 0;
 	CvUnit* pLoopUnit = 0;
-	FStaticVector<IDInfo, 10, true, c_eCiv5GameplayDLL, 0> oldUnitList;
-	FStaticVector<CvUnitCaptureDefinition, 8, true, c_eCiv5GameplayDLL, 0> kCaptureUnitList;
+	vector<IDInfo> oldUnitList;
+	vector<CvUnitCaptureDefinition> kCaptureUnitList;
 	ActivityTypes eOldActivityType = NO_ACTIVITY;
 	TeamTypes activeTeam = GC.getGame().getActiveTeam();
 	TeamTypes eOurTeam = getTeam();

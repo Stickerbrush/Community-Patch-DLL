@@ -4766,6 +4766,10 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget)
 		if (pLoopUnit->getUnitInfo().GetDefaultUnitAIType() == UNITAI_DEFENSE_AIR)
 			continue;
 
+		//don't pull out garrisons when we need them - they have separate moves
+		if (pLoopUnit->IsGarrisoned() && pLoopUnit->GetGarrisonedCity()->isUnderSiege())
+			continue;
+
 		bool bCanReach = false;
 		if ( pLoopUnit->IsCanAttackRanged() )
 		{
