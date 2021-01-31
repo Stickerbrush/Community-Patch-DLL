@@ -548,12 +548,12 @@ void CvTacticalAI::FindTacticalTargets()
 				}
 
 				// ... defensive bastion?
-				if (m_pPlayer->GetID() == pLoopPlot->getOwner() && pLoopPlot->IsBorderLand( m_pPlayer->GetID() ) &&
+				if (m_pPlayer->GetID() == pLoopPlot->getOwner() &&
 					(pLoopPlot->defenseModifier(m_pPlayer->getTeam(), false, false) >= 30 || pLoopPlot->IsChokePoint())
 					)
 				{
 					CvCity* pDefenseCity = pLoopPlot->getOwningCity();
-					if ((pDefenseCity && (pDefenseCity->isBorderCity() || pDefenseCity->isUnderSiege())) || pLoopPlot->IsChokePoint())
+					if (pDefenseCity && pDefenseCity->isBorderCity())
 					{
 						newTarget.SetTargetType(AI_TACTICAL_TARGET_DEFENSIVE_BASTION);
 						if (pDefenseCity)
