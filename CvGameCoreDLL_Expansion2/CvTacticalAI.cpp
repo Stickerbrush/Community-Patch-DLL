@@ -556,28 +556,11 @@ void CvTacticalAI::FindTacticalTargets()
 					if (pDefenseCity && pDefenseCity->isBorderCity())
 					{
 						newTarget.SetTargetType(AI_TACTICAL_TARGET_DEFENSIVE_BASTION);
-						if (pDefenseCity)
-						{
-							int iValue = pDefenseCity->getThreatValue() + pLoopPlot->defenseModifier(m_pPlayer->getTeam(), false, false);
-							if (pDefenseCity->isUnderSiege())
-							{
-								iValue *= 5;
-							}
-							if (pLoopPlot->IsChokePoint() || pDefenseCity->isInDangerOfFalling())
-							{
-								iValue *= 10;
-							}
-							newTarget.SetAuxIntData(iValue);
-						}
-						else
-						{
-							int iValue = pLoopPlot->defenseModifier(m_pPlayer->getTeam(), false, false);
-							if (pLoopPlot->IsChokePoint())
-							{
-								iValue *= 10;
-							}
-							newTarget.SetAuxIntData(iValue);
-						}
+						int iValue = pDefenseCity->getThreatValue() + pLoopPlot->defenseModifier(m_pPlayer->getTeam(), false, false);
+						if (pDefenseCity->isUnderSiege() || pLoopPlot->IsChokePoint())
+							iValue *= 5;
+
+						newTarget.SetAuxIntData(iValue);
 						m_AllTargets.push_back(newTarget);
 					}
 				}
