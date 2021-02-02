@@ -7870,7 +7870,7 @@ void CvUnit::doHeal()
 		if (IsCanAttack())
 		{
 #if defined(MOD_BARBARIANS_HEAL_EVERYWHERE)
-			if (IsHurt() && !hasMoved() && getDomainType()==DOMAIN_LAND && isNativeDomain(plot()))
+			if (IsHurt() && !hasMoved() && getDomainType()==DOMAIN_LAND && isNativeDomain(plot()) && (plot()->isBarbarian() || !plot()->isOwned()))
 #else
 			ImprovementTypes eCamp = (ImprovementTypes)GC.getBARBARIAN_CAMP_IMPROVEMENT();
 			if (IsHurt() && !hasMoved() && (plot()->getImprovementType() == eCamp || plot()->getOwner() == BARBARIAN_PLAYER))

@@ -76,6 +76,20 @@
 	int GetJonRand(int iRange) { return GC.getGame().getJonRandNum(iRange,"generic"); }
 #endif
 
+struct stringHash
+{
+	//taken from std::tr1::hash<string> but modified to look at all characters
+	size_t operator()(const std::string& key) const
+	{
+		size_t _Val = 2166136261U;
+		size_t _First = 0;
+		size_t _Last = key.size();
+		for(; _First < _Last; _First++)
+			_Val = 16777619U * _Val ^ (size_t)key[_First];
+		return (_Val);
+	}
+};
+
 //------------------------------------------------------------------------------
 // CvGame Version History
 // Version 1 
@@ -4967,7 +4981,7 @@ void CvGame::SetStaticTutorialActive(bool bStaticTutorialActive)
 //	--------------------------------------------------------------------------------
 bool CvGame::HasAdvisorMessageBeenSeen(const char* szAdvisorMessageName)
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	std::tr1::unordered_set<size_t>::iterator it = m_AdvisorMessagesViewed.find( hasher(szAdvisorMessageName) );
 	return it != m_AdvisorMessagesViewed.end();
 }
@@ -4975,7 +4989,7 @@ bool CvGame::HasAdvisorMessageBeenSeen(const char* szAdvisorMessageName)
 //	--------------------------------------------------------------------------------
 void CvGame::SetAdvisorMessageHasBeenSeen(const char* szAdvisorMessageName, bool bSeen)
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	if(bSeen)
 	{
 		m_AdvisorMessagesViewed.insert( hasher(szAdvisorMessageName) );
@@ -8568,7 +8582,7 @@ void CvGame::setName(const char* szName)
 //	--------------------------------------------------------------------------------
 bool CvGame::isDestroyedCityName(CvString& szName) const
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	std::vector<size_t>::const_iterator it = std::find(m_aszDestroyedCities.begin(), m_aszDestroyedCities.end(), hasher(szName.c_str()));
 	return it != m_aszDestroyedCities.end();
 }
@@ -8576,14 +8590,14 @@ bool CvGame::isDestroyedCityName(CvString& szName) const
 //	--------------------------------------------------------------------------------
 void CvGame::addDestroyedCityName(const CvString& szName)
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	m_aszDestroyedCities.push_back( hasher(szName.c_str()) );
 }
 
 //	--------------------------------------------------------------------------------
 bool CvGame::isGreatPersonBorn(CvString& szName) const
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	std::vector<size_t>::const_iterator it = std::find(m_aszGreatPeopleBorn.begin(), m_aszGreatPeopleBorn.end(), hasher(szName.c_str()));
 	return it != m_aszGreatPeopleBorn.end();
 }
@@ -8591,7 +8605,7 @@ bool CvGame::isGreatPersonBorn(CvString& szName) const
 //	--------------------------------------------------------------------------------
 void CvGame::addGreatPersonBornName(const CvString& szName)
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	m_aszGreatPeopleBorn.push_back( hasher(szName.c_str()) );
 }
 
@@ -8599,7 +8613,7 @@ void CvGame::addGreatPersonBornName(const CvString& szName)
 //	--------------------------------------------------------------------------------
 void CvGame::removeGreatPersonBornName(const CvString& szName)
 {
-	std::tr1::hash<std::string> hasher;
+	stringHash hasher;
 	m_aszGreatPeopleBorn.erase(std::remove(m_aszGreatPeopleBorn.begin(), m_aszGreatPeopleBorn.end(), hasher(szName.c_str())), m_aszGreatPeopleBorn.end());
 }
 #endif
