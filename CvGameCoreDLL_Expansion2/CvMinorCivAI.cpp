@@ -14236,56 +14236,31 @@ void CvMinorCivAI::SetUnitSpawningDisabled(PlayerTypes ePlayer, bool bValue)
 }
 
 /// Create a unit
-#if defined(MOD_GLOBAL_CS_GIFTS)
 CvUnit* CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor, bool bLocal, bool bExplore)
-#else
-void CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor)
-#endif
 {
-#if defined(MOD_GLOBAL_CS_GIFTS)
 	CvUnit* pSpawnUnit = NULL;
-#endif
 
-	CvAssertMsg(eMajor >= 0, "eMajor is expected to be non-negative (invalid Index)");
-	CvAssertMsg(eMajor < MAX_MAJOR_CIVS, "eMajor is expected to be within maximum bounds (invalid Index)");
-#if defined(MOD_GLOBAL_CS_GIFTS)
 	if(eMajor < 0 || eMajor >= MAX_MAJOR_CIVS) return NULL;
-#else
-	if(eMajor < 0 || eMajor >= MAX_MAJOR_CIVS) return;
-#endif
 
 	if(!IsUnitSpawningDisabled(eMajor) && GET_PLAYER(eMajor).GetNumUnitsOutOfSupply() <= 0)
 	{
 		// Minor must have Capital
 		CvCity* pMinorCapital = GetPlayer()->getCapitalCity();
 		if(pMinorCapital == NULL)
-		{
-			FAssertMsg(false, "MINOR CIV AI: Trying to spawn a Unit for a major civ but the minor has no capital. Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
-#if defined(MOD_GLOBAL_CS_GIFTS)
 			return NULL;
-#else
-			return;
-#endif
-		}
 
 		CvPlot* pMinorCapitalPlot = pMinorCapital->plot();
 		if(pMinorCapitalPlot == NULL)
-		{
-			CvAssertMsg(false, "MINOR CIV AI: Trying to spawn a Unit for a major civ but the minor's capital has no plot. Please send Anton your save file and version.");
-#if defined(MOD_GLOBAL_CS_GIFTS)
 			return NULL;
-#else
-			return;
-#endif
-		}
 
-#if defined(MOD_GLOBAL_CS_GIFTS_LOCAL_XP)
-		CvCity* pMajorCapital = GET_PLAYER(eMajor).getCapitalCity();
-		CvCity* pSpawnCity = pMajorCapital ? pMajorCapital : pMinorCapital;
-#endif
+		//where to put the unit?
+		CvCity* pSpawnCity = GET_PLAYER(eMajor).GetClosestCityByPathLength(pMinorCapitalPlot);
+		if (pSpawnCity == NULL)
+			return NULL;
 
 		// Pick Unit type
 		UnitTypes eUnit = NO_UNIT;
+		bool bNavalUnit = false;
 		if (GetAlly() == eMajor)
 		{	
 			// Should we give our unique unit?
@@ -14296,29 +14271,49 @@ void CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor)
 				CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eUniqueUnit);
 				if (pkUnitInfo)
 				{
-					// Ally must have unit's prereq tech
-					TechTypes ePrereqTech = (TechTypes) pkUnitInfo->GetPrereqAndTech();
-					if (ePrereqTech == NO_TECH || GET_TEAM(GET_PLAYER(eMajor).getTeam()).GetTeamTechs()->HasTech(ePrereqTech))
+					//problem: unique unit may be naval but the spawn city is inland ... find a different city then!
+					if (pkUnitInfo->GetDomainType() == DOMAIN_SEA && !pSpawnCity->isCoastal())
 					{
-						// Ally must NOT have unit's obsolete tech
-						TechTypes eObsoleteTech = (TechTypes) pkUnitInfo->GetObsoleteTech();
-						if (eObsoleteTech == NO_TECH || !GET_TEAM(GET_PLAYER(eMajor).getTeam()).GetTeamTechs()->HasTech(eObsoleteTech))
+						pSpawnCity = NULL;
+
+						int iLoop = 0;
+						for (CvCity* pLoopCity = GET_PLAYER(eMajor).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(eMajor).nextCity(&iLoop))
 						{
-							bUseUniqueUnit = true;
+							if (pLoopCity->isCoastal())
+							{
+								pSpawnCity = pLoopCity;
+								break;
+							}
+						}
+					}
+
+					if (pSpawnCity)
+					{
+						// Ally must have unit's prereq tech
+						TechTypes ePrereqTech = (TechTypes)pkUnitInfo->GetPrereqAndTech();
+						if (ePrereqTech == NO_TECH || GET_TEAM(GET_PLAYER(eMajor).getTeam()).GetTeamTechs()->HasTech(ePrereqTech))
+						{
+							// Ally must NOT have unit's obsolete tech
+							TechTypes eObsoleteTech = (TechTypes)pkUnitInfo->GetObsoleteTech();
+							if (eObsoleteTech == NO_TECH || !GET_TEAM(GET_PLAYER(eMajor).getTeam()).GetTeamTechs()->HasTech(eObsoleteTech))
+							{
+								bUseUniqueUnit = true;
+							}
 						}
 					}
 				}
 			}
 			
-#if defined(MOD_GLOBAL_CS_GIFTS)
-			if (bExplore) {
+			if (bExplore)
+			{
 #if defined(MOD_GLOBAL_CS_GIFT_SHIPS)
 				eUnit = GC.getGame().GetCsGiftSpawnUnitType(eMajor, pSpawnCity->plot()->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()) && MOD_GLOBAL_CS_GIFT_SHIPS);
 #else
 				eUnit = GC.getGame().GetCsGiftSpawnUnitType(eMajor);
 #endif
-			} else {
-#endif
+			}
+			else
+			{
 				if (bUseUniqueUnit)
 				{
 					eUnit = eUniqueUnit;
@@ -14331,63 +14326,36 @@ void CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor)
 					eUnit = GC.getGame().GetCompetitiveSpawnUnitType(eMajor, /*bIncludeUUs*/ false, /*bIncludeRanged*/true);
 #endif
 				}
-#if defined(MOD_GLOBAL_CS_GIFTS)
 			}
-#endif
 		}
 		else
 		{
-#if defined(MOD_GLOBAL_CS_GIFTS)
-			if (bExplore) {
+			if (bExplore)
+			{
 #if defined(MOD_GLOBAL_CS_GIFT_SHIPS)
 				eUnit = GC.getGame().GetCsGiftSpawnUnitType(eMajor, pSpawnCity->plot()->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()) && MOD_GLOBAL_CS_GIFT_SHIPS);
 #else
 				eUnit = GC.getGame().GetCsGiftSpawnUnitType(eMajor);
 #endif
-			} else {
-#endif
+			} 
+			else
+			{
 #if defined(MOD_GLOBAL_CS_GIFT_SHIPS)
 				eUnit = GC.getGame().GetCompetitiveSpawnUnitType(eMajor, /*bIncludeUUs*/ false, /*bIncludeRanged*/true, MOD_GLOBAL_CS_GIFT_SHIPS);
 #else
 				eUnit = GC.getGame().GetCompetitiveSpawnUnitType(eMajor, /*bIncludeUUs*/ false, /*bIncludeRanged*/true);
 #endif
-#if defined(MOD_GLOBAL_CS_GIFTS)
 			}
-#endif
-		}
-
-		//where to put the unit?
-		int iX = pSpawnCity->getX();
-		int iY = pSpawnCity->getY();
-		CvCity* pMajorCity = GET_PLAYER(eMajor).GetClosestCityByPathLength(pMinorCapitalPlot);
-
-#if defined(MOD_GLOBAL_CS_GIFTS)
-		if(!bLocal && pMajorCity != NULL)
-#else
-		if(pMajorCity != NULL)
-#endif
-		{
-			CvPlot* pUnitPlot = pMajorCity->GetPlotForNewUnit(eUnit);
-			if (pUnitPlot)
-			{
-				iX = pUnitPlot->getX();
-				iY = pUnitPlot->getY();
-			}
-			else
-			{
-				iX = pMajorCity->getX();
-				iY = pMajorCity->getY();
-			}
-			
-#if defined(MOD_GLOBAL_CS_GIFTS_LOCAL_XP)
-			pSpawnCity = pMajorCity;
-#endif
 		}
 
 		// Spawn Unit
 		if(eUnit != NO_UNIT)
 		{
-			CvUnit* pNewUnit = GET_PLAYER(eMajor).initUnit(eUnit, iX, iY);
+			CvPlot* pUnitPlot = pSpawnCity->GetPlotForNewUnit(eUnit);
+			if (!pUnitPlot)
+				return NULL;
+
+			CvUnit* pNewUnit = GET_PLAYER(eMajor).initUnit(eUnit, pUnitPlot->getX(), pUnitPlot->getY());
 
 			// If player trait is to enhance minor bonuses, give this unit some free experience
 			if(GET_PLAYER(eMajor).GetPlayerTraits()->GetCityStateBonusModifier() > 0)
@@ -14412,9 +14380,7 @@ void CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor)
 
 				AddNotification(strMessage.toUTF8(), strSummary.toUTF8(), eMajor, pNewUnit->getX(), pNewUnit->getY());
 
-#if defined(MOD_GLOBAL_CS_GIFTS)
 				pSpawnUnit = pNewUnit;
-#endif
 			}
 			else
 				pNewUnit->kill(false);	// Could not find a spot!
@@ -14424,9 +14390,7 @@ void CvMinorCivAI::DoSpawnUnit(PlayerTypes eMajor)
 	// Reseed counter
 	DoSeedUnitSpawnCounter(eMajor);
 
-#if defined(MOD_GLOBAL_CS_GIFTS)
 	return pSpawnUnit;
-#endif
 }
 
 /// Time to spawn a Unit?

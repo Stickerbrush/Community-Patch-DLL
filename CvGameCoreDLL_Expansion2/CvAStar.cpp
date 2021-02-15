@@ -1186,7 +1186,7 @@ int PathEndTurnCost(CvPlot* pToPlot, const CvPathNodeCacheData& kToNodeCacheData
 	TeamTypes eUnitTeam = pUnitDataCache->getTeam();
 	DomainTypes eUnitDomain = pUnitDataCache->getDomainType();
 
-	if(pUnit->IsCanAttack())
+	if(pUnit->IsCanDefend())
 	{
 		iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (PATH_ASSUMED_MAX_DEFENSE - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false, false)))));
 	}

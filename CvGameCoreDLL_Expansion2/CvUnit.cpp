@@ -21433,22 +21433,22 @@ void CvUnit::DoAdjacentPlotDamage(CvPlot* pWhere, int iValue, const char* chText
 
 	for (int i=RING0_PLOTS; i<RING1_PLOTS; i++)
 	{
-		CvPlot* pPlot = iterateRingPlots(pWhere, i);
-		if (!pPlot)
+		CvPlot* pSplashPlot = iterateRingPlots(pWhere, i);
+		if (!pSplashPlot)
 			continue;
 
-		//splash damage only for adjacent plots and range-attackable plots
-		if (plotDistance(*plot(),*pPlot)>1 && !canEverRangeStrikeAt(pPlot->getX(), pPlot->getY()))
+		//splash damage only for range-attackable plots
+		if (!canEverRangeStrikeAt(pSplashPlot->getX(), pSplashPlot->getY(), plot(), false))
 			continue;
 
-		for (int iJ = 0; iJ < pPlot->getNumUnits(); iJ++)
+		for (int iJ = 0; iJ < pSplashPlot->getNumUnits(); iJ++)
 		{
-			CvUnit* pEnemyUnit = pPlot->getUnitByIndex(iJ);
+			CvUnit* pEnemyUnit = pSplashPlot->getUnitByIndex(iJ);
 			//logically we should damage non-enemy units as well? but that is too complex to consider ... 
 			if (pEnemyUnit != NULL && pEnemyUnit->isEnemy(getTeam()))
 			{
 				//no splash damage in cities/forts
-				if (pPlot->isFriendlyCityOrPassableImprovement(pEnemyUnit->getOwner()))
+				if (pSplashPlot->isFortification(pEnemyUnit->getTeam()))
 					continue;
 
 				if (iValue + pEnemyUnit->getDamage() >= pEnemyUnit->GetMaxHitPoints())

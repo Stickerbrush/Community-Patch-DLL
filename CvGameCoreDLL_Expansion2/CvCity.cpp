@@ -2716,7 +2716,7 @@ void CvCity::doTurn()
 					if(pkResourceInfo != NULL && pkResourceInfo->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
 					{		
 						// See if there are any BuildingClass requirements
-						if(GET_PLAYER(getOwner()).getResourceOverValue(eResourceLoop) > 0)
+						if(GET_PLAYER(getOwner()).getResourceShortageValue(eResourceLoop) > 0)
 						{
 							const int iNumBuildingClassInfos = GC.getNumBuildingClassInfos();
 							const CvCivilizationInfo& thisCivilization = GET_PLAYER(getOwner()).getCivilizationInfo();
@@ -2750,9 +2750,9 @@ void CvCity::doTurn()
 									{
 										int iResourceDelta = 0;
 										//If amount we're under is less than resource quantity, take the lesser value.
-										if(GET_PLAYER(getOwner()).getResourceOverValue(eResourceLoop) < pkBuildingInfo->GetResourceQuantityRequirement(eResourceLoop))
+										if(GET_PLAYER(getOwner()).getResourceShortageValue(eResourceLoop) < pkBuildingInfo->GetResourceQuantityRequirement(eResourceLoop))
 										{
-											iResourceDelta = GET_PLAYER(getOwner()).getResourceOverValue(eResourceLoop);
+											iResourceDelta = GET_PLAYER(getOwner()).getResourceShortageValue(eResourceLoop);
 										}
 										//Otherwise, take the building's full value.
 										else
@@ -2762,10 +2762,10 @@ void CvCity::doTurn()
 										if(iResourceDelta > 0)
 										{
 											iBad += (iResourceDelta * 2);
-											GET_PLAYER(getOwner()).changeResourceOverValue(eResourceLoop, -iResourceDelta);
-											if(GET_PLAYER(getOwner()).getResourceOverValue(eResourceLoop) < 0)
+											GET_PLAYER(getOwner()).changeResourceShortageValue(eResourceLoop, -iResourceDelta);
+											if(GET_PLAYER(getOwner()).getResourceShortageValue(eResourceLoop) < 0)
 											{
-												GET_PLAYER(getOwner()).setResourceOverValue(eResourceLoop, 0);
+												GET_PLAYER(getOwner()).setResourceShortageValue(eResourceLoop, 0);
 											}
 											CvNotifications* pNotifications = GET_PLAYER(getOwner()).GetNotifications();
 											if(pNotifications)

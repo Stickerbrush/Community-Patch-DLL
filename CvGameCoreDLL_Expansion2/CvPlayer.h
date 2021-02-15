@@ -2160,9 +2160,9 @@ public:
 	int getCityYieldModFromMonopoly(YieldTypes eYield) const;
 	void changeCityYieldModFromMonopoly(YieldTypes eYield, int iValue);
 
-	int getResourceOverValue(ResourceTypes eIndex) const;
-	void changeResourceOverValue(ResourceTypes eIndex, int iChange);
-	void setResourceOverValue(ResourceTypes eIndex, int iChange);
+	int getResourceShortageValue(ResourceTypes eIndex) const;
+	void changeResourceShortageValue(ResourceTypes eIndex, int iChange);
+	void setResourceShortageValue(ResourceTypes eIndex, int iChange);
 
 	int getResourceFromCSAlliances(ResourceTypes eIndex) const;
 	void changeResourceFromCSAlliances(ResourceTypes eIndex, int iChange);
@@ -3441,7 +3441,7 @@ protected:
 	FAutoVariable<std::vector<int>, CvPlayer> m_paiJFDPoliticPercent;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiYieldFromMinors;
 	FAutoVariable<std::vector<int>, CvPlayer> m_paiResourceFromCSAlliances;
-	FAutoVariable<std::vector<int>, CvPlayer> m_paiResourceOverValue;
+	FAutoVariable<std::vector<int>, CvPlayer> m_paiResourceShortageValue;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiYieldFromBirth;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiYieldFromBirthCapital;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiYieldFromDeath;

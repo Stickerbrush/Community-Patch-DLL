@@ -644,7 +644,7 @@ CvPlayer::CvPlayer() :
 #if defined(MOD_BALANCE_CORE_POLICIES)
 	, m_paiJFDPoliticPercent("CvPlayer::m_paiJFDPoliticPercent", m_syncArchive)
 	, m_paiResourceFromCSAlliances("CvPlayer::m_paiResourceFromCSAlliances", m_syncArchive)
-	, m_paiResourceOverValue("CvPlayer::m_paiResourceOverValue", m_syncArchive)
+	, m_paiResourceShortageValue("CvPlayer::m_paiResourceShortageValue", m_syncArchive)
 	, m_aiGlobalTourismAlreadyReceived("CvPlayer::m_aiGlobalTourismAlreadyReceived", m_syncArchive)
 	, m_aiYieldFromMinors("CvPlayer::m_aiYieldFromMinors", m_syncArchive)
 	, m_aiYieldFromBirth("CvPlayer::m_aiYieldFromBirth", m_syncArchive)
@@ -2026,8 +2026,8 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 		m_paiResourceFromCSAlliances.clear();
 		m_paiResourceFromCSAlliances.resize(GC.getNumResourceInfos(), 0);
 
-		m_paiResourceOverValue.clear();
-		m_paiResourceOverValue.resize(GC.getNumResourceInfos(), 0);
+		m_paiResourceShortageValue.clear();
+		m_paiResourceShortageValue.resize(GC.getNumResourceInfos(), 0);
 
 		m_paiNumCitiesFreeChosenBuilding.clear();
 		m_paiNumCitiesFreeChosenBuilding.resize(GC.getNumBuildingClassInfos(), 0);
@@ -38245,39 +38245,39 @@ void CvPlayer::changeNumResourceTotal(ResourceTypes eIndex, int iChange, bool bI
 }
 #if defined(MOD_BALANCE_CORE_RESOURCE_MONOPOLIES)
 //	--------------------------------------------------------------------------------
-int CvPlayer::getResourceOverValue(ResourceTypes eIndex) const
+int CvPlayer::getResourceShortageValue(ResourceTypes eIndex) const
 {
 	CvAssertMsg(eIndex >= 0, "eIndex is expected to be non-negative (invalid Index)");
 	CvAssertMsg(eIndex < GC.getNumResourceInfos(), "eIndex is expected to be within maximum bounds (invalid Index)");
-	return m_paiResourceOverValue[eIndex];
+	return m_paiResourceShortageValue[eIndex];
 }
 
 //	--------------------------------------------------------------------------------
-void CvPlayer::changeResourceOverValue(ResourceTypes eIndex, int iChange)
+void CvPlayer::changeResourceShortageValue(ResourceTypes eIndex, int iChange)
 {
 	CvAssert(eIndex >= 0);
 	CvAssert(eIndex < GC.getNumResourceInfos());
 
 	if(iChange != 0)
 	{
-		m_paiResourceOverValue.setAt(eIndex, m_paiResourceOverValue[eIndex] + iChange);
+		m_paiResourceShortageValue.setAt(eIndex, m_paiResourceShortageValue[eIndex] + iChange);
 	}
 
 	GC.GetEngineUserInterface()->setDirty(GameData_DIRTY_BIT, true);
 
-	CvAssert(m_paiResourceOverValue[eIndex] >= 0);
+	CvAssert(m_paiResourceShortageValue[eIndex] >= 0);
 }
 //	--------------------------------------------------------------------------------
-void CvPlayer::setResourceOverValue(ResourceTypes eIndex, int iChange)
+void CvPlayer::setResourceShortageValue(ResourceTypes eIndex, int iChange)
 {
 	CvAssert(eIndex >= 0);
 	CvAssert(eIndex < GC.getNumResourceInfos());
 
-	m_paiResourceOverValue.setAt(eIndex, iChange);
+	m_paiResourceShortageValue.setAt(eIndex, iChange);
 
 	GC.GetEngineUserInterface()->setDirty(GameData_DIRTY_BIT, true);
 
-	CvAssert(m_paiResourceOverValue[eIndex] >= 0);
+	CvAssert(m_paiResourceShortageValue[eIndex] >= 0);
 }
 
 
@@ -38896,7 +38896,7 @@ void CvPlayer::DoTestOverResourceNotification(ResourceTypes eIndex)
 	{
 #if defined(MOD_BALANCE_CORE)
 		//Flip the amount available as our drain pool - helper for cities to prevent empire wide drop.
-		setResourceOverValue(eIndex, (getNumResourceAvailable(eIndex, true) * -1));
+		setResourceShortageValue(eIndex, (getNumResourceAvailable(eIndex, true) * -1));
 		int iUnitLoop;
 		CvUnit* pLoopUnit = NULL;
 

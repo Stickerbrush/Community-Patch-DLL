@@ -4270,8 +4270,11 @@ bool CvPlot::isFriendlyCity(const CvUnit& kUnit) const
 	return false;
 }
 
-bool CvPlot::MeleeAttackerAdvances(TeamTypes eAttackerTeam) const
+bool CvPlot::isFortification(TeamTypes eDefenderTeam) const
 {
+	if (isCity())
+		return true;
+
 #if defined(MOD_GLOBAL_NO_FOLLOWUP_FROM_CITIES)
 	if (MOD_GLOBAL_NO_FOLLOWUP_FROM_CITIES)
 	{
@@ -4280,18 +4283,16 @@ bool CvPlot::MeleeAttackerAdvances(TeamTypes eAttackerTeam) const
 		static const  ImprovementTypes eImprovementCitadel = (ImprovementTypes)GC.getInfoTypeForString("IMPROVEMENT_CITADEL");
 		static const  ImprovementTypes eImprovementCamp = (ImprovementTypes)GC.getBARBARIAN_CAMP_IMPROVEMENT();
 
-		if (isCity())
-			return false;
-
-		if (getTeam() == eAttackerTeam && !IsImprovementPillaged())
+		if (getTeam() == eDefenderTeam && !IsImprovementPillaged())
 		{
 			ImprovementTypes eImprovement = getImprovementType();
 			if (eImprovement == eImprovementFort || eImprovement == eImprovementCitadel || eImprovement == eImprovementCamp)
-				return false;
+				return true;
 		}
 	}
 #endif
-	return true;
+
+	return false;
 }
 
 bool CvPlot::isFriendlyCityOrPassableImprovement(PlayerTypes ePlayer, const CvUnit* pUnit) const

@@ -232,7 +232,7 @@ public:
 	bool isRevealedBarbarian() const;
 
 	bool HasBarbarianCamp();
-	bool MeleeAttackerAdvances(TeamTypes eAttackerTeam) const;
+	bool isFortification(TeamTypes eDefenderTeam) const;
 
 #if defined(MOD_DIPLOMACY_CITYSTATES_QUESTS)
 	bool HasDig();

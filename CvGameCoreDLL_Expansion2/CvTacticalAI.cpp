@@ -945,7 +945,7 @@ void CvTacticalAI::PlotGrabGoodyMoves()
 
 	//allow a fairly big range so we can clear islands as well unless we're at war and need the units otherwise
 	//note the barbarians are excluded from that check
-	int iRange = m_pPlayer->IsAtWarAnyMajor() ? 4 : 11;
+	int iRange = m_pPlayer->IsAtWarAnyMajor() ? 6 : 11;
 
 	//ruins first
 	for (CvTacticalTarget* pTarget = GetFirstZoneTarget(AI_TACTICAL_TARGET_GOODY); pTarget!=NULL; pTarget = GetNextZoneTarget())
@@ -6915,10 +6915,10 @@ void ScoreAttack(const CvTacticalPlot& tactPlot, const CvUnit* pUnit, const CvTa
 				result.eAssignmentType = A_RANGEKILL;
 			else
 			{
-				if (pUnitPlot->MeleeAttackerAdvances(pUnit->getTeam()))
-					result.eAssignmentType = A_MELEEKILL;
-				else
+				if (pUnitPlot->isFortification(pUnit->getTeam()))
 					result.eAssignmentType = A_MELEEKILL_NO_ADVANCE;
+				else
+					result.eAssignmentType = A_MELEEKILL;
 			}
 		}
 	}
