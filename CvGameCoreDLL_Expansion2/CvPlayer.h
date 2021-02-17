@@ -2667,6 +2667,7 @@ public:
 	bool GetEverTrainedBuilder(void);
 	// end Tutorial functions
 
+	bool CanEmbark() const;
 	bool CanCrossOcean() const;
 	bool CanCrossMountain() const;
 	bool CanCrossIce() const;

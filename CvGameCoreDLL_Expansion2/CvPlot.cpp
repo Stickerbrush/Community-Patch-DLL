@@ -14038,7 +14038,7 @@ bool CvPlot::isValidMovePlot(PlayerTypes ePlayer, bool bCheckTerritory) const
 			if (isDeepWater() && GET_PLAYER(ePlayer).CanCrossOcean())
 				bCanPassBecauseOfPlayerTrait = true;
 			//and shallow water... (this is necessary because of scenarios and tech situations where units can embark before techs, and vice-versa.
-			if (isShallowWater() && GET_TEAM(GET_PLAYER(ePlayer).getTeam()).canEmbark())
+			if (isShallowWater() && GET_PLAYER(ePlayer).CanEmbark())
 				bCanPassBecauseOfPlayerTrait = true;
 
 			if (!bCanPassBecauseOfPlayerTrait)

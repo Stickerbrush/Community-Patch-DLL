@@ -28061,7 +28061,7 @@ bool CvCity::CanBuyPlot(int iPlotX, int iPlotY, bool bIgnoreCost)
 	if (pTargetPlot->isDeepWater())
 	{
 		CvPlayer& kPlayer = GET_PLAYER(getOwner());
-		if (!kPlayer.CanCrossOcean() && !GET_TEAM(kPlayer.getTeam()).canEmbarkAllWaterPassage())
+		if (!kPlayer.CanCrossOcean())
 			return false;
 	}
 

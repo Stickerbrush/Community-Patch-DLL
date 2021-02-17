@@ -992,7 +992,7 @@ void CvUnit::initWithNameOffset(int iID, UnitTypes eUnit, int iNameOffset, UnitA
 	}
 
 	// Give embark promotion for free?
-	if(GET_TEAM(getTeam()).canEmbark() || kPlayer.GetPlayerTraits()->IsEmbarkedAllWater())
+	if(kPlayer.CanEmbark())
 	{
 		PromotionTypes ePromotionEmbarkation = kPlayer.GetEmbarkationPromotion();
 
@@ -2025,7 +2025,7 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 				//Can't embark yet, or the unit should auto get it?
 				if (pUnit->isHasPromotion(ePromotion) || getUnitInfo().GetFreePromotions(ePromotion))
 				{
-					if(!GET_PLAYER(getOwner()).GetPlayerTraits()->IsEmbarkedAllWater() && !GET_TEAM(GET_PLAYER(getOwner()).getTeam()).canEmbarkAllWaterPassage())
+					if(!GET_PLAYER(getOwner()).CanCrossOcean())
 					{
 						bGivePromotion = true;
 					}

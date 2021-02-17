@@ -9394,7 +9394,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry, bool bReturnConque
 			if (kLoopPlayer.GetProximityToPlayer(m_pPlayer->GetID()) >= PLAYER_PROXIMITY_CLOSE)
 			{
 				iNumNeighbors++;
-				if (GET_TEAM(m_pPlayer->getTeam()).canEmbarkAllWaterPassage() && m_pPlayer->GetDiplomacyAI()->GetMajorCivApproach((PlayerTypes)iPlayerLoop) <= MAJOR_CIV_APPROACH_GUARDED)
+				if (m_pPlayer->CanCrossOcean() && m_pPlayer->GetDiplomacyAI()->GetMajorCivApproach((PlayerTypes)iPlayerLoop) <= MAJOR_CIV_APPROACH_GUARDED)
 				{
 					iNumNeighbors++;
 				}

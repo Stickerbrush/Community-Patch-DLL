@@ -5988,41 +5988,6 @@ bool TacticalAIHelpers::PerformRangedOpportunityAttack(CvUnit* pUnit, bool bAllo
 	}
 }
 
-///Returns false if insufficient free plots around the target
-int TacticalAIHelpers::CountDeploymentPlots(const CvPlot* pTarget, int iRange, TeamTypes eTeam, bool bForNavalOp)
-{
-	int iNumDeployPlotsFound = 0;
-	bool bAllowDeepWater = GET_TEAM(eTeam).canEmbarkAllWaterPassage();
-
-	iRange = max(1, min(5, iRange));
-	for (int i = 0; i < RING_PLOTS[iRange]; i++)
-	{
-		CvPlot* pPlot = iterateRingPlots(pTarget, i);
-		if (!pPlot)
-			continue;
-
-		if(pPlot->isImpassable(eTeam))
-			continue;
-
-		if (pPlot->isOwned() && pPlot->getTeam() != eTeam)
-			continue;
-
-		if (pPlot->isWater())
-		{
-			if (!bForNavalOp)
-				continue;
-			else if(!bAllowDeepWater && pPlot->isDeepWater())
-				continue;
-		}
-		else if (bForNavalOp)
-			continue;
-
-		iNumDeployPlotsFound++;
-	}
-
-	return iNumDeployPlotsFound;
-}
-
 CvPlot* TacticalAIHelpers::FindSafestPlotInReach(const CvUnit* pUnit, bool bAllowEmbark, bool bConsiderSwap, bool bConsiderPush)
 {
 	vector<OptionWithScore<CvPlot*>> aCityList;

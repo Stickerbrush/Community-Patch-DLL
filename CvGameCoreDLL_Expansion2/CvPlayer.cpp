@@ -36942,7 +36942,7 @@ void CvPlayer::DoUpdateProximityToPlayer(PlayerTypes ePlayer)
 	PlayerProximityTypes eProximity = PLAYER_PROXIMITY_DISTANT;
 
 	//can't embark? non-continent members are distant.
-	if (!GET_TEAM(getTeam()).canEmbark())
+	if (!CanEmbark())
 	{
 		CvPlot* pA = GC.getMap().plotByIndex(closestCities.first);
 		CvPlot* pB = GC.getMap().plotByIndex(closestCities.second);
@@ -36971,7 +36971,7 @@ void CvPlayer::DoUpdateProximityToPlayer(PlayerTypes ePlayer)
 	}
 
 	//can embark, but not oceanic? non-continent members are one pip less.
-	if (GET_TEAM(getTeam()).canEmbark() && !GET_TEAM(getTeam()).canEmbarkAllWaterPassage())
+	if (CanEmbark())
 	{
 		CvPlot* pA = GC.getMap().plotByIndex(closestCities.first);
 		CvPlot* pB = GC.getMap().plotByIndex(closestCities.second);
@@ -47794,7 +47794,7 @@ CvPlot* CvPlayer::GetBestSettlePlot(const CvUnit* pUnit, CvAIOperation* pOpToIgn
 	//if we want to go to other continents, we need a very large search radius
 	EconomicAIStrategyTypes eStrategyExpandToOtherContinents = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
 	bool bWantOffshore = GetEconomicAI()->IsUsingStrategy(eStrategyExpandToOtherContinents);
-	bool bCanEmbark = GET_TEAM(getTeam()).canEmbark() || GetPlayerTraits()->IsEmbarkedAllWater();
+	bool bCanEmbark = CanEmbark();
 
 	CvMap& kMap = GC.getMap();
 	int iNumPlots = kMap.numPlots();
@@ -48415,6 +48415,10 @@ bool CvPlayer::IsAllowedToTradeWith(PlayerTypes eOtherPlayer)
 	return true;
 }
 
+bool CvPlayer::CanEmbark() const
+{
+	return GET_TEAM(getTeam()).canEmbark() || GetPlayerTraits()->IsEmbarkedAllWater();
+}
 bool CvPlayer::CanCrossOcean() const
 {
 	return GET_TEAM(getTeam()).canEmbarkAllWaterPassage() || GetPlayerTraits()->IsEmbarkedAllWater();
