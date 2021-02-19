@@ -2084,6 +2084,10 @@ void CvTacticalAI::PlotReinforcementMoves(CvTacticalDominanceZone* pTargetZone)
 				if (pUnit->AI_getUnitAIType() == UNITAI_CARRIER_SEA)
 					continue;
 
+				// Do not move siege units into enemy dominated zones ... wait until we have some cover!
+				if (pUnit->AI_getUnitAIType() == UNITAI_CITY_BOMBARD && pTargetZone->GetOverallDominanceFlag() == TACTICAL_DOMINANCE_ENEMY)
+					continue;
+
 				// Proper domain of unit?
 				// Note that coastal cities have two zones, so we will call this method twice
 				if ((pTargetZone->IsWater() && pUnit->getDomainType() == DOMAIN_SEA) ||
